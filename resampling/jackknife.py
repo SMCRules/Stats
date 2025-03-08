@@ -81,3 +81,16 @@ def variance_jackknife_estimate(data: np.ndarray):
     # Jackknife estimate of variance
     variance_jackknife = ((n - 1) / n) * np.sum((jack_replication - theta_hat_loo)**2)
     return variance_jackknife
+
+# apply the code
+data = dgp(mu=0, sigma=1, n=5000)
+# mean and variance of data
+print(f"Mean of data: {np.mean(data)}")
+print(f"Variance of data: {np.var(data)}")
+print(f"Estimator applied to dgp: {estimator(data)}")
+# bias-corrected jackknife estimator
+print(f"Bias-corrected jackknife estimator: {bias_jackknife_estimate(data)['theta_jack']}")
+# jackknife estimate of bias
+print(f"Jackknife estimate of bias: {bias_jackknife_estimate(data)['bias_jackknife']}")
+# jackknife estimate of variance
+print(f"Jackknife estimate of variance: {variance_jackknife_estimate(data)}")
