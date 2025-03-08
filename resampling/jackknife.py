@@ -1,12 +1,24 @@
 import numpy as np
+import math
 # function to generate data
 def dgp(mu: float, sigma: float, n: int):
-    return np.random.normal(mu= mu, sigma=sigma, size=n)
+    """
+    Generates n samples from a normal distribution with mean `mu` and standard deviation `sigma`.
+
+    Parameters:
+        mu (float): Mean of the normal distribution.
+        sigma (float): Standard deviation of the normal distribution.
+        n (int): Number of samples.
+
+    Returns:
+        np.ndarray: An array of `n` random samples.
+    """
+    return np.random.normal(loc=mu, scale=sigma, size=n)
 
 # function to define an estimator
 def estimator(data: np.ndarray):
     return np.mean(data)
-    #return np.square(np.mean(data))
+    # return np.square(np.mean(data))
 
 # function to apply the one-leave-out on dgp
 def leave_one_out_data(data: np.ndarray):
@@ -80,10 +92,11 @@ def variance_jackknife_estimate(data: np.ndarray):
     theta_hat_loo = leave_one_out_estimator(data)
     # Jackknife estimate of variance
     variance_jackknife = ((n - 1) / n) * np.sum((jack_replication - theta_hat_loo)**2)
+    
     return variance_jackknife
 
 # apply the code
-data = dgp(mu=0, sigma=1, n=5000)
+data = dgp(mu=3, sigma=math.sqrt(2), n=5000)
 # mean and variance of data
 print(f"Mean of data: {np.mean(data)}")
 print(f"Variance of data: {np.var(data)}")
