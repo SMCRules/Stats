@@ -82,9 +82,26 @@ def bootstrap_bias(data: np.ndarray, boot_samples: np.ndarray):
 
         "boot_bias": boot_bias,
         "boot_estimate": boot_estimate
-    } 
+    }
 
-# apply the code
+def bootstrap_variance(data: np.ndarray, boot_samples: np.ndarray):
+    """
+    Computes the bootstrap estimate of the variance of an estimator.
+
+    Parameters:
+        data (np.ndarray): A 1D array of original data points.
+        boot_samples (np.ndarray): A 2D array of shape (B, n) containing bootstrap samples.
+
+    Returns:
+        float: The bootstrap estimate of the variance.
+    """
+    # Compute bootstrap estimates
+    bootstrap_estimates = np.apply_along_axis(estimator, axis=1, arr=boot_samples)
+
+    # Compute bootstrap variance using unbiased estimator (Bessel's correction)
+    return np.var(bootstrap_estimates, ddof=1) 
+
+# application
 data = dgp(mu=5, sigma=math.sqrt(10), n=5000)
 # mean and variance of data
 print(f"Mean of data: {np.mean(data)}")
@@ -94,9 +111,8 @@ print(f"Estimator applied to dgp: {estimator(data)}")
 # Generate balanced bootstrap samples
 B = 100
 boot_samples = bootstrap_dataset(data, B)
-
 # Compute bootstrap bias and corrected estimate
 result = bootstrap_bias(data, boot_samples)
-
 print("Bootstrap Bias:", result["boot_bias"])
 print("Bias-Corrected Estimate:", result["boot_estimate"])
+print("Bootstrap Variance:", bootstrap_variance(data, boot_samples))

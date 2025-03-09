@@ -66,11 +66,11 @@ def bias_jackknife_estimate(data: np.ndarray):
     # Leave-one-out estimate  
     theta_hat_loo = aver_loo_estimator(data)  
     # Bias-corrected estimate
-    theta_jack = n * theta_hat - (n - 1) * theta_hat_loo
+    theta_jack = (n * theta_hat) - (n - 1) * theta_hat_loo
     # Jackknife estimate of bias
     bias_jackknife = (n - 1) * (theta_hat_loo - theta_hat)  
     
-    return {
+    return {         
         "theta_jack": theta_jack,
         "bias_jackknife": bias_jackknife
     }
@@ -97,10 +97,13 @@ def variance_jackknife_estimate(data: np.ndarray):
 
 # apply the code
 data = dgp(mu=5, sigma=math.sqrt(10), n=5000)
+# data = list(range(1,6))
 # mean and variance of data
 print(f"Mean of data: {np.mean(data)}")
 print(f"Variance of data: {np.var(data)}")
 print(f"Estimator applied to dgp: {estimator(data)}")
+# jackknife values
+# print(f"Jackknife values:", np.mean(leave_one_out_data(data), axis=1))
 # bias-corrected jackknife estimator
 print(f"Bias-corrected jackknife estimator: {bias_jackknife_estimate(data)['theta_jack']}")
 # jackknife estimate of bias
