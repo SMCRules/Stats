@@ -1,8 +1,3 @@
-# https://medium.com/@enozeren/building-a-decision-tree-from-scratch-324b9a5ed836
-# use kaggle
-# https://www.kaggle.com/code/fareselmenshawii/decision-tree-from-scratch/notebook
-# link tennis dt3 data
-# https://www.kaggle.com/datasets/krishnagiri/id3csv/data
 
 import math
 import numpy as np
