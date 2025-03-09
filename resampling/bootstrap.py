@@ -4,6 +4,7 @@ In the absence of any additional information about the estimator,
 the sample itself offers the best guide for the sampling distribution
 """
 import numpy as np
+import math
 
 # function to generate data
 def dgp(mu: float, sigma: float, n: int):
@@ -52,10 +53,50 @@ def bootstrap_dataset(data: np.ndarray, B: int):
     
     return bootstrap_samples
     
-data = list(range(1, 11))
-print(data)
-bootstrap_samples = bootstrap_dataset(data, B=5)
-print(bootstrap_samples)
+# function to estimate bootstrap bias
+def bootstrap_bias(data: np.ndarray, boot_samples: np.ndarray):
+    """
+    Computes the bootstrap estimate of the bias and the 
+    bias-corrected estimate of an estimator.
 
+    Parameters:
+        data (np.ndarray): A 1D array of original data points.
+        boot_samples (np.ndarray): A 2D array of shape (B, n) containing bootstrap samples.
 
+    Returns:
+        dict: A dictionary containing:
+            - "boot_bias": The bootstrap estimate of the bias.
+            - "boot_estimate": The bias-corrected estimate.
+    """
+    # Compute the average bootstrap estimate
+    bootstrap_estimates = np.apply_along_axis(estimator, axis=1, arr=boot_samples)
+    average_boot_estimator = np.mean(bootstrap_estimates)    
+    # Compute the original estimate
+    plugin_estimate = estimator(data)
+    # Compute the bootstrap bias
+    boot_bias = average_boot_estimator - plugin_estimate
+    # Compute the bootstrap bias corrected estimate
+    boot_estimate = (2 * plugin_estimate) - average_boot_estimator 
+    
+    return {
 
+        "boot_bias": boot_bias,
+        "boot_estimate": boot_estimate
+    } 
+
+# apply the code
+data = dgp(mu=5, sigma=math.sqrt(10), n=5000)
+# mean and variance of data
+print(f"Mean of data: {np.mean(data)}")
+print(f"Variance of data: {np.var(data)}")
+print(f"Estimator applied to dgp: {estimator(data)}")
+
+# Generate balanced bootstrap samples
+B = 100
+boot_samples = bootstrap_dataset(data, B)
+
+# Compute bootstrap bias and corrected estimate
+result = bootstrap_bias(data, boot_samples)
+
+print("Bootstrap Bias:", result["boot_bias"])
+print("Bias-Corrected Estimate:", result["boot_estimate"])
