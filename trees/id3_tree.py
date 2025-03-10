@@ -1,5 +1,4 @@
 # https://www.kaggle.com/code/maryampirjamaat/id3-decision-tree-classifier/notebook
-# https://www.kaggle.com/code/usman1902/id3-classification
 
 import pandas as pd
 import numpy as np
@@ -91,3 +90,74 @@ tree = id3(df, attributes)
 import pprint
 pprint.pprint(tree)
 
+# tree visualization
+from graphviz import Digraph
+
+def visualize_tree(tree, parent_name="", graph=None):
+    """Recursively visualize an ID3 decision tree using Graphviz."""
+    if graph is None:
+        graph = Digraph(format='png')
+        graph.attr(size='8,8')
+
+    for key, value in tree.items():
+        node_name = str(key)  # Attribute at this level
+        graph.node(node_name, label=node_name)  # Create a node
+
+        if parent_name:
+            graph.edge(str(parent_name), str(node_name))  # Connect to parent
+
+        if isinstance(value, dict):  # If there are further splits
+            for attr_value, subtree in value.items():
+                if isinstance(subtree, dict):  # If subtree is another split
+                    visualize_tree({attr_value: subtree}, node_name, graph)
+                else:  # If subtree is a leaf node
+                    leaf_name = f"{attr_value} -> {subtree}"  # Use "->" instead of ":"
+                    graph.node(leaf_name, label=leaf_name, shape='box', style='filled', fillcolor='lightgray')
+                    graph.edge(str(node_name), str(leaf_name))  # Connect properly
+
+    return graph
+
+# Generate and visualize the tree
+graph = visualize_tree(tree)
+graph.render("decision_tree", view=True)  # Saves and opens the image
+
+### sklearn implementation
+
+from sklearn.tree import DecisionTreeClassifier, plot_tree
+from sklearn.compose import ColumnTransformer
+from sklearn.preprocessing import OneHotEncoder, LabelEncoder
+import matplotlib.pyplot as plt
+
+def draw_decision_tree(X, y):
+    # OneHotEncoder features (X)
+    categorical_features = X.select_dtypes(include=['object']).columns
+    preprocessor = ColumnTransformer(transformers=[('cat', OneHotEncoder(), categorical_features)])
+    X_encoded = preprocessor.fit_transform(X)
+    # Convert X_encoded back to a DataFrame
+    X_encoded = pd.DataFrame(
+        X_encoded, 
+        columns=preprocessor.get_feature_names_out(X.columns)
+        )
+
+    # LabelEncoder target (y)
+    label_encoder = LabelEncoder()
+    y_encoded = label_encoder.fit_transform(y)
+    
+    clf = DecisionTreeClassifier(criterion='entropy', random_state=42)
+    clf.fit(X_encoded, y_encoded)
+
+    plt.figure(figsize=(15, 10))
+    plot_tree(
+        clf,
+        feature_names=X_encoded.columns,
+        class_names=label_encoder.classes_, 
+        filled=True, rounded=True
+        )
+    plt.savefig('sklearn_tree.png')
+    plt.show()
+
+target_variable = 'Answer'
+X = df.drop(columns=[target_variable])
+y = df[target_variable]
+
+draw_decision_tree(X, y)
