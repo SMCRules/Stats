@@ -9,20 +9,6 @@ import plotly.express as px
 import pprint 
 from typing import Optional, Union
 
-
-# Outlook Temperature Humidity  Wind Answer
-# we are trying to predict answer (whether or not to play tennis given weather)
-# fig = px.pie(df, 'Answer', color='Answer', 
-# color_discrete_sequence=['#007500','#5CFF5C'],title='Answer Ratio')
-# fig.show()
-
-# fig, ax = plt.subplots(figsize=(10, 6))
-# df_melted = df.melt(id_vars=['Answer'], value_vars=['Outlook', 'Temperature', 'Humidity', 'Wind'])
-# sns.countplot(data=df_melted, x='variable', hue='value', ax=ax)
-# plt.title('Distribution of Categorical Variables')
-# plt.xticks(rotation=45)
-# plt.show()
-
 class Node():
     """
     A class representing a node in a decision tree.
@@ -62,7 +48,6 @@ class Node():
             return f"Leaf(value={self.value})"
         return f"Node(feature={self.feature}, threshold={self.threshold}, gain={self.gain})"
 
-
 class DecisionTree():
     """
     A decision tree classifier for binary classification problems.
@@ -81,7 +66,8 @@ class DecisionTree():
 
     def split_data(self, dataset, feature, threshold):
         """
-        Splits the given dataset into two datasets based on the given feature and threshold.
+        Splits the given dataset into two datasets (left and right) 
+        based on the given feature and threshold value.
 
         Parameters:
             dataset (ndarray): Input dataset.
@@ -135,12 +121,13 @@ class DecisionTree():
 
     def information_gain(self, parent, left, right):
         """
-        Computes the information gain from splitting the parent dataset into two datasets.
+        Computes the information gain (on y values)
+        after splitting the parent dataset into two datasets.
 
         Parameters:
-            parent (ndarray): Input parent dataset.
-            left (ndarray): Subset of the parent dataset after split on a feature.
-            right (ndarray): Subset of the parent dataset after split on a feature.
+            parent (ndarray): Input y values for the parent dataset.
+            left (ndarray): Subset of the y values (parent) after a left split.
+            right (ndarray): Subset of the y values (parent) after a right split.
 
         Returns:
             information_gain (float): Information gain of the split.
@@ -171,18 +158,18 @@ class DecisionTree():
         num_features (int): The number of features in the dataset.
 
         Returns:
-        dict: A dictionary with the best split feature index, threshold, gain, 
-              left and right datasets.
+        dict: A dictionary with the best split: 
+        feature index, threshold, gain, left and right datasets.
         """
         # dictionary to store the best split values
         best_split = {'gain':- 1, 'feature': None, 'threshold': None}
         # loop over all the features
         for feature_index in range(num_features):
-            #get the feature at the current feature_index
+            # get the feature values at feature_index
             feature_values = dataset[:, feature_index]
-            #get unique values of that feature
+            # unique values of that feature
             thresholds = np.unique(feature_values)
-            # loop over all values of the feature
+            # loop over threshold values of the feature
             for threshold in thresholds:
                 # get left and right datasets
                 left_dataset, right_dataset = self.split_data(dataset, feature_index, threshold)
