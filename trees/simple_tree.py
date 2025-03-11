@@ -9,20 +9,6 @@ import plotly.express as px
 import pprint 
 from typing import Optional, Union
 
-
-# Outlook Temperature Humidity  Wind Answer
-# we are trying to predict answer (whether or not to play tennis given weather)
-# fig = px.pie(df, 'Answer', color='Answer', 
-# color_discrete_sequence=['#007500','#5CFF5C'],title='Answer Ratio')
-# fig.show()
-
-# fig, ax = plt.subplots(figsize=(10, 6))
-# df_melted = df.melt(id_vars=['Answer'], value_vars=['Outlook', 'Temperature', 'Humidity', 'Wind'])
-# sns.countplot(data=df_melted, x='variable', hue='value', ax=ax)
-# plt.title('Distribution of Categorical Variables')
-# plt.xticks(rotation=45)
-# plt.show()
-
 class Node():
     """
     A class representing a node in a decision tree.
