@@ -75,14 +75,17 @@ class DecisionTree():
             threshold (float): Threshold value to split the feature on.
 
         Returns:
-            left_dataset (ndarray): Subset of the dataset with values less than or equal to the threshold.
-            right_dataset (ndarray): Subset of the dataset with values greater than the threshold.
+            left_dataset (ndarray): Subset of the dataset with values less than 
+            or equal to the threshold.
+            right_dataset (ndarray): Subset of the dataset with values greater 
+            than the threshold.
         """
         # Create empty arrays to store the left and right datasets
         left_dataset = []
         right_dataset = []
         
-        # Loop over each row in the dataset and split based on the given feature and threshold
+        # Loop over each row in the dataset and 
+        # split based on the given feature and threshold
         for row in dataset:
             if row[feature] <= threshold:
                 left_dataset.append(row)
@@ -150,7 +153,10 @@ class DecisionTree():
     
     def best_split(self, dataset, num_samples, num_features):
         """
-        Finds the best split for the given dataset.
+        Finds the best split for the given dataset
+        looping through features
+        looping through unique values or thresholds
+        compute information gain and compare with stored best gain.
 
         Args:
         dataset (ndarray): The dataset to split.
@@ -222,7 +228,7 @@ class DecisionTree():
         if n_samples >= self.min_samples and current_depth <= self.max_depth:
             # Get the best split
             best_split = self.best_split(dataset, n_samples, n_features)
-            # Check if gain isn't zero
+            # Check that gain isn't zero. positive gain = True
             if best_split["gain"]:
                 # continue splitting the left and the right child. Increment current depth
                 left_node = self.build_tree(best_split["left_dataset"], current_depth + 1)
@@ -231,7 +237,7 @@ class DecisionTree():
                 return Node(best_split["feature"], best_split["threshold"],
                             left_node, right_node, best_split["gain"])
 
-        # compute leaf node value
+        # compute leaf node value if not enough samples or max depth
         leaf_value = self.calculate_leaf_value(y)
         # return leaf node value
         return Node(value=leaf_value)
@@ -270,7 +276,8 @@ class DecisionTree():
     
     def make_prediction(self, x, node):
         """
-        Traverses the decision tree to predict the target value for the given feature vector.
+        Traverses the decision tree to predict the target value 
+        for the given feature vector.
 
         Args:
         x (ndarray): The feature vector to predict the target value for.
@@ -283,7 +290,8 @@ class DecisionTree():
         if node.value != None: 
             return node.value
         else:
-            #if it's node a leaf node we'll get it's feature and traverse through the tree accordingly
+            #if it's node a leaf node we'll get it's feature and traverse 
+            # through the tree accordingly
             feature = x[node.feature]
             if feature <= node.threshold:
                 return self.make_prediction(x, node.left)
