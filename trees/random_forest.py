@@ -83,7 +83,7 @@ class RandomForest:
             tree = DecisionTreeClassifier(max_depth=self.max_depth, min_samples_split=self.min_samples)
             # Sample from the dataset with replacement (bootstrapping).
             dataset_sample = self.bootstrap_samples(dataset)
-            # Get the X and y samples from the dataset sample.
+            # Get the X and y samples from the shuffled dataset_sample.
             X_sample, y_sample = dataset_sample[:, :-1], dataset_sample[:, -1]
             # Fit the tree to the X and y samples.
             tree.fit(X_sample, y_sample)
@@ -109,6 +109,8 @@ class RandomForest:
         n_samples = dataset.shape[0]
         # Generate random indices to index into the dataset with replacement.
         np.random.seed(1)
+        # selects size = n_samples indices randomly 
+        # with replacement from the range [0, n_samples-1]: shuffled dataset
         indices = np.random.choice(n_samples, n_samples, replace=True)
         # Return the bootstrapped dataset sample using the generated indices.
         dataset_sample = dataset[indices]
@@ -149,10 +151,22 @@ class RandomForest:
         """
         #get prediction from each tree in the tree list on the test data
         predictions = np.array([tree.predict(X) for tree in self.trees])
-        # get prediction for the same sample from all trees for each sample in the test data
+        # reorganize predictions into a structure where each row corresponds 
+        # to the predictions of all trees for a single test sample.
         preds = np.swapaxes(predictions, 0, 1)
-        #get the most voted value by the trees and store it in the final predictions array
+        # iterates over each row (pred) in preds, where each pred is the list 
+        # of predictions for a specific test sample across all trees.
+        # For each row, it calls self.most_common_label(pred) to determine 
+        # the most frequent prediction.
         majority_predictions = np.array([self.most_common_label(pred) for pred in preds])
+        """
+        The Random Forest algorithm is an ensemble learning method that 
+        aggregates the predictions of multiple models (trees) to improve 
+        accuracy and reduce overfitting. The idea is that individual 
+        trees might make different predictions, but by using majority voting 
+        (in classification) or averaging (in regression), 
+        we can get a more robust and accurate prediction.
+        """
         return majority_predictions
 
 
