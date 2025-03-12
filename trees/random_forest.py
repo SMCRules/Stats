@@ -210,12 +210,6 @@ def accuracy(y_true, y_pred):
 # evaluation
 iris = pd.read_csv('/home/miguel/Python_Projects/datasets/id3/Iris.csv')
 #print(iris.head())
-X_df = iris.iloc[:,:-1] #Set our training dataframe
-y_df = iris.iloc[:,-1] # Set our training labels dataframe
-
-iris['Species'] = iris['Species'].astype("category")
-codes = iris['Species'].cat.codes
-
 X = iris.iloc[:, :-1].values
 y = iris.iloc[:, -1].to_numpy()
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=.2, random_state=50)
