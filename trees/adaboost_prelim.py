@@ -44,7 +44,7 @@ alphas = []
 errors = []
 
 # AdaBoost loop
-M = 10
+M = 1000
 for i in range(M):
     # Train weak classifier
     dt = DecisionTreeClassifier(max_depth=1)
@@ -73,14 +73,20 @@ def ensemble_predict(X):
     final_preds = np.sign(np.sum(weak_preds, axis=0))  # Weighted sum and sign
     return (final_preds > 0).astype(int)  # Convert to 0/1
 
-# Plot final decision boundary
-plot_decision_regions(X, y, clf=None, legend=2)
+# Create a mesh grid for visualization
 xx, yy = np.meshgrid(np.linspace(X[:, 0].min(), X[:, 0].max(), 100),
                      np.linspace(X[:, 1].min(), X[:, 1].max(), 100))
+
+# Compute ensemble predictions for each point in the grid
 Z = ensemble_predict(np.c_[xx.ravel(), yy.ravel()])
 Z = Z.reshape(xx.shape)
+
+# Plot the decision boundary
 plt.contourf(xx, yy, Z, alpha=0.3)
-plt.scatter(X[:, 0], X[:, 1], c=y, edgecolors='k', marker='o')
+
+# Plot the dataset
+sns.scatterplot(x=X[:, 0], y=X[:, 1], hue=y, edgecolor="k")
+
 plt.title(f"Final Ensemble Decision Boundary after {M} iterations")
 plt.show()
 
