@@ -6,25 +6,31 @@ from mlxtend.plotting import plot_decision_regions
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.tree import plot_tree
 
+def error(norm_weights, y_pred, y_true):
+    """
+    norm_weights is already normalized (sum(norm_weights) == 1)
+    we can skip the division:
+    """
+    return np.dot(norm_weights, y_pred != y_true)
+
 def calculate_model_weight(error):
     error = np.clip(error, 1e-10, 1 - 1e-10)  # Keep error in (ε, 1-ε)
-    return 0.5 * np.log((1 - error)/(error + epsilon)) 
+    return 0.5 * np.log((1 - error)/(error)) 
 # Update weights
-def update_row_weights(row, alpha=0.423):
+def update_row_weights(row, alpha):
     if row['label'] == row['y_pred']:
         return row['weights'] * np.exp(-alpha) # Correctly classified
     else:
         return row['weights'] * np.exp(alpha)
-"""
+
 # NumPy's vectorized operations for efficiency:
-df['weights'] *= np.exp(
-    -alpha * (
-        df['label'] == df['y_pred']
-    ) + alpha * (
-        df['label'] != df['y_pred']
-    )
+def update_weights(weights, y_true, y_pred, alpha):
+    return weights * np.exp(
+        -alpha * (y_true == y_pred
+        ) + alpha * (y_true != y_pred)
         )
-"""
+
+
 # create a toy dataframe
 df = pd.DataFrame()
 df['X1'] = [1,2,3,4,5,6,6,7,9,9]
@@ -37,6 +43,7 @@ plt.show()
 #### adaboost.M1
 # 1.initialize 1/N weights for every row
 df['weights'] = 1/df.shape[0]
+df['norm_weights'] = df['weights']/(df['weights'].sum())
 # for m = 1, ... M
 # 2. train a weak classifier with max_depth = 1, using sample weights
 dt1 = DecisionTreeClassifier(max_depth=1)
@@ -46,10 +53,22 @@ y = df['label'].to_numpy()
 dt1.fit(X, y, sample_weight=df['weights'])
 plot_tree(dt1)
 # plt.show()
-plot_decision_regions(X, y, clf=dt1, legend=2)
+# plot_decision_regions(X, y, clf=dt1, legend=2)
 # plt.show()
-# 3. calculate error rate
-df['y_pred'] = dt1.predict(X)
+# 3. calculate weighted error rate
+e_i = error(df['weights'], dt1.predict(X), y)
 # 4. update weights
+alpha_i = calculate_model_weight(e_i)
+# df['weights'] = df.apply(update_row_weights, axis=1, alpha=alpha_i)
+df['y_pred'] = dt1.predict(X)
+df['weights'] = update_weights(
+    df['weights'].to_numpy(), 
+    df['label'].to_numpy(), 
+    df['y_pred'].to_numpy(), alpha
+    )
+df['norm_weights'] = df['weights']/(df['weights'].sum())
 
-
+# 5. Resample data based on updated weights
+df_resampled = df.sample(n=len(df), replace=True, weights=df['normalized_weights'], random_state=42)
+X_resampled = df_resampled[['X1', 'X2']].to_numpy()
+y_resampled = df_resampled['label'].to_numpy()
