@@ -48,7 +48,8 @@ plot_tree(dt1)
 # plt.show()
 plot_decision_regions(X, y, clf=dt1, legend=2)
 # plt.show()
-# 3. calculate error
+# 3. calculate error rate
+df['y_pred'] = dt1.predict(X)
 # 4. update weights
 
 
