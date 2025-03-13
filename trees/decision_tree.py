@@ -299,8 +299,8 @@ class DecisionTree():
                 return self.make_prediction(x, node.right)
 
 ### Feature selection
-df = pd.read_csv('/home/miguel/Python_Projects/datasets/id3/breast-cancer.xls')
-# df = pd.read_csv('/home/miguel/Python_Projects/datasets/id3/id3.xls')
+df = pd.read_csv('/home/miguel/Python_Projects/datasets/breast-cancer.xls')
+# df = pd.read_csv('/home/miguel/Python_Projects/datasets/id3.xls')
 # print(df.head())
 # drop redundant columns
 df.drop('id', axis=1, inplace=True) 

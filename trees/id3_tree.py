@@ -81,7 +81,7 @@ def id3(data, attributes):
     return tree
 
 ### implementation
-file_path = "/home/miguel/Python_Projects/datasets/id3/id3.xls"
+file_path = "/home/miguel/Python_Projects/datasets/id3.xls"
 df = pd.read_csv(file_path)
 # The last column is the yes/no response variable
 attributes = list(df.columns[:-1])  

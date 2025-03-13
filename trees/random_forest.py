@@ -222,7 +222,7 @@ def accuracy(y_true, y_pred):
     return (correct_predictions / total_samples)
 
 # evaluation
-iris = pd.read_csv('/home/miguel/Python_Projects/datasets/id3/Iris.csv')
+iris = pd.read_csv('/home/miguel/Python_Projects/datasets/Iris.csv')
 #print(iris.head())
 X = iris.iloc[:, :-1].values
 y = iris.iloc[:, -1].to_numpy()
