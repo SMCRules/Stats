@@ -52,3 +52,10 @@ def decision_boundary_plot(X, y, X_train, y_train, clf, feature_indexes, title=N
 X2, y2 = load_diabetes(return_X_y=True, as_frame=True)
 X2_train, X2_test, y2_train, y2_test = train_test_split(X2, y2, random_state=0)
 print(X2, y2, sep='\n')
+
+gbr = GBMRegressor(random_state=0)
+gbr.fit(X2_train, y2_train)
+gbr_pred_res = gbr.predict(X2_test)
+mape = mean_absolute_percentage_error(y2_test, gbr_pred_res)
+print(f'gbr mape: {mape}')
+print(gbr_pred_res)
