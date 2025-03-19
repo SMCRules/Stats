@@ -1,4 +1,3 @@
-# https://www.kaggle.com/code/maryampirjamaat/id3-decision-tree-classifier/notebook
 
 import pandas as pd
 import numpy as np
