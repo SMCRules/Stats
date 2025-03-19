@@ -4,7 +4,19 @@ import numpy as np
 # Classification Tree base class
 class ClassificationTree:
     """
-    Base class for classification trees.
+    Base class for classification trees (also known as an abstract class).
+    It provides a blueprint for any specific classification tree algorithm, 
+    such as ID3, C4.5, or CART. 
+    The class itself does not implement the functionality, only defines a 
+    common interface for all classification tree implementations.
+
+    Definition of the Structure:
+    Framework for classification trees by defining common methods:
+        fit(X, y): To train the model.
+        predict(X): To make predictions.
+        _split(X, y): To split the dataset at a node.
+        _grow_tree(X, y): To recursively build the decision tree.
+    
     """
 
     def __init__(self):
@@ -20,7 +32,7 @@ class ClassificationTree:
         raise NotImplementedError("This method should be overridden.")
 
     def _grow_tree(self, X, y):
-        raise NotI
+        raise NotImplementedError("This method should be overridden.")
 
 class ID3Classifier(ClassificationTree):
     """
@@ -42,6 +54,8 @@ class ID3Classifier(ClassificationTree):
     def predict(self, X):
         """
         Predict the class labels for the input data.
+        The list comprehension in the predict method loops through all rows 
+        of the predictor dataset X and applies _predict to each row.
         
         Parameters:
         X : np.ndarray
