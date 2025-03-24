@@ -38,16 +38,7 @@ class Node():
         self.right = right
         self.gain = gain
         self.value = value
-
-    def is_leaf(self):
-        """Returns True if the node is a leaf (has a value but no children)."""
-        return self.value is not None
-
-    def __repr__(self):
-        if self.is_leaf():
-            return f"Leaf(value={self.value})"
-        return f"Node(feature={self.feature}, threshold={self.threshold}, gain={self.gain})"
-
+    
 class DecisionTree():
     """
     A decision tree classifier for binary classification problems.
