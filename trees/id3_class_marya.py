@@ -3,6 +3,12 @@ import pandas as pd
 import numpy as np
 from math import log2
 
+"""
+Simplest version of ID3 classifying algorithm. 
+It assumes that all attributes are discrete
+Implementation relies of functions and no classes
+"""
+
 def entropy(data):
     """
     input: data is the whole dataset with last column as response variable
@@ -79,8 +85,9 @@ def id3(data, attributes):
 
     return tree
 
-### implementation
+### implementation: both datasets are identical
 file_path = "/home/miguel/Python_Projects/datasets/id3.xls"
+# file_path = "/home/miguel/Python_Projects/datasets/tennis.csv"
 df = pd.read_csv(file_path)
 # The last column is the yes/no response variable
 attributes = list(df.columns[:-1])  
@@ -118,7 +125,7 @@ def visualize_tree(tree, parent_name="", graph=None):
 
 # Generate and visualize the tree
 graph = visualize_tree(tree)
-graph.render("decision_tree", view=True)  # Saves and opens the image
+# graph.render("id3_tennis_tree", view=True)  # Saves and opens the image
 
 ### sklearn implementation
 
@@ -152,7 +159,7 @@ def draw_decision_tree(X, y):
         class_names=label_encoder.classes_, 
         filled=True, rounded=True
         )
-    plt.savefig('sklearn_tree.png')
+    # plt.savefig('sklearn_tree.png')
     plt.show()
 
 target_variable = 'Answer'
