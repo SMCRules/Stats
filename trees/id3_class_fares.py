@@ -8,6 +8,13 @@ import matplotlib.pyplot as plt
 import plotly.express as px
 import pprint 
 from typing import Optional, Union
+from sklearn.preprocessing import LabelEncoder
+
+"""
+More advanced than id3_class_marya.py. 
+Functionality include classes. 
+Attributes are continuous but discretized with thresholds
+"""
 
 class Node():
     """
@@ -289,35 +296,53 @@ class DecisionTree():
             else:
                 return self.make_prediction(x, node.right)
 
-### Feature selection
-df = pd.read_csv('/home/miguel/Python_Projects/datasets/breast-cancer.xls')
-# df = pd.read_csv('/home/miguel/Python_Projects/datasets/id3.xls')
-# print(df.head())
-# drop redundant columns
-df.drop('id', axis=1, inplace=True) 
-# encode the label into 1/0
-df['diagnosis'] = (df['diagnosis'] == 'M').astype(int) 
-corr = df.corr()
+def data_load(file_path):
+    # Identify the dataset based on the file name
+    file_name = file_path.split('/')[-1]
+    df = pd.read_csv(file_path)
+    
+    if 'breast-cancer' in file_name:        
+        # Drop the redundant 'id' column
+        df.drop('id', axis=1, inplace=True)
+        # Encode the label into binary (0/1)
+        df['diagnosis'] = (df['diagnosis'] == 'M').astype(int)
+        # Compute correlations to remove weakly correlated features
+        corr = df.corr()
+        cor_target = abs(corr["diagnosis"])
+        # Select highly correlated features (threshold = 0.25)
+        relevant_features = cor_target[cor_target > 0.25].index
+        df = df[relevant_features]
+        X = df.drop('diagnosis', axis=1).values
+        y = df['diagnosis'].values.reshape(-1,1)
+        
+    elif 'diabetes' in file_name:        
+        X = df.drop('Outcome', axis=1).values
+        y = df['Outcome'].values.reshape(-1,1)
 
-# Get the absolute value of the correlation
-cor_target = abs(corr["diagnosis"])
+    elif 'Iris' in file_name:        
+        # Drop the 'Id' column
+        df.drop('Id', axis=1, inplace=True)
+        # Encode the target variable with LabelEncoder
+        le = LabelEncoder()
+        df['Species'] = le.fit_transform(df['Species'])
+        X = df.drop('Species', axis=1).values
+        y = df['Species'].values.reshape(-1,1)
 
-# Select highly correlated features (thresold = 0.99)
-relevant_features = cor_target[cor_target>0.25]
+    else:
+        raise ValueError("Unsupported dataset. Please provide a valid file path.")
+    
+    return X, y
 
-# Collect the names of the features
-names = [index for index, value in relevant_features.items()]
 
-# Drop the target variable from the results
-names.remove('diagnosis')
-# Display the results
-# pprint.pprint(names)
+### Implementation
+X, y = data_load('/home/miguel/Python_Projects/datasets/breast-cancer.xls')
+print(X.shape, y.shape)
 
-### evaluation
-# Assign trainning data and training labels
+# X, y = data_load('/home/miguel/Python_Projects/datasets/Iris.csv')
+# print(X.shape, y.shape)
 
-X = df[names].values
-y = df['diagnosis'].values.reshape(-1,1)
+#X, y = data_load('/home/miguel/Python_Projects/datasets/diabetes.csv')
+#print(X.shape, y.shape)
 
 def scale(X):
     """
