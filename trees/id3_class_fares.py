@@ -7,7 +7,6 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 import plotly.express as px
 import pprint 
-from typing import Optional, Union
 from sklearn.preprocessing import LabelEncoder
 
 """
@@ -21,12 +20,12 @@ class Node():
     A class representing a node in a decision tree.
     """    
     def __init__(self, 
-                 feature: Optional[str] = None, 
-                 threshold: Optional[Union[int, float]] = None, 
-                 left: Optional['Node'] = None, 
-                 right: Optional['Node'] = None, 
-                 gain: Optional[float] = None, 
-                 value: Optional[Union[int, float, str]] = None):
+                 feature = None, 
+                 threshold = None, 
+                 left = None, 
+                 right = None, 
+                 gain = None, 
+                 value = None):
         """
         Initializes a new instance of the Node class.
 
@@ -153,7 +152,7 @@ class DecisionTree():
         """
         Finds the best split for the given dataset
         looping through features
-        looping through unique values or thresholds
+        looping through unique values of features (thresholds)
         compute information gain and compare with stored best gain.
 
         Args:
@@ -312,10 +311,12 @@ def data_load(file_path):
         # Select highly correlated features (threshold = 0.25)
         relevant_features = cor_target[cor_target > 0.25].index
         df = df[relevant_features]
+        X_cols = df.drop('diagnosis', axis=1).columns
         X = df.drop('diagnosis', axis=1).values
         y = df['diagnosis'].values.reshape(-1,1)
         
-    elif 'diabetes' in file_name:        
+    elif 'diabetes' in file_name:
+        X_cols = df.drop('Outcome', axis=1).columns       
         X = df.drop('Outcome', axis=1).values
         y = df['Outcome'].values.reshape(-1,1)
 
@@ -325,23 +326,24 @@ def data_load(file_path):
         # Encode the target variable with LabelEncoder
         le = LabelEncoder()
         df['Species'] = le.fit_transform(df['Species'])
+        X_cols = df.drop('Species', axis=1).columns
         X = df.drop('Species', axis=1).values
         y = df['Species'].values.reshape(-1,1)
 
     else:
         raise ValueError("Unsupported dataset. Please provide a valid file path.")
     
-    return X, y
+    return X, y, X_cols
 
 
 ### Implementation
-X, y = data_load('/home/miguel/Python_Projects/datasets/breast-cancer.xls')
+X, y, X_cols = data_load('/home/miguel/Python_Projects/datasets/breast-cancer.xls')
 print(X.shape, y.shape)
 
-# X, y = data_load('/home/miguel/Python_Projects/datasets/Iris.csv')
+# X, y, X_cols = data_load('/home/miguel/Python_Projects/datasets/Iris.csv')
 # print(X.shape, y.shape)
 
-#X, y = data_load('/home/miguel/Python_Projects/datasets/diabetes.csv')
+#X, y, X_cols = data_load('/home/miguel/Python_Projects/datasets/diabetes.csv')
 #print(X.shape, y.shape)
 
 def scale(X):
@@ -477,10 +479,30 @@ model.fit(X_train, y_train)
 predictions = model.predict(X_test)
 
 # Calculate evaluating metrics
-print(f"Model's Accuracy: {accuracy(y_test, predictions)}")
-print(f"Model's Balanced Accuracy: {balanced_accuracy(y_test, predictions)}")
+print(f"ID3 Code's Accuracy: {accuracy(y_test, predictions)}")
+print(f"ID3 Code's Balanced Accuracy: {balanced_accuracy(y_test, predictions)}")
 # Model's Accuracy: 0.9557522123893806
 # Model's Balanced Accuracy: 0.9601027397260273
 
+# sklearn implementation
+from sklearn.tree import DecisionTreeClassifier, plot_tree
+# Create a decision tree classifier model object.
+decision_tree_classifier = DecisionTreeClassifier()
+# Train the decision tree classifier model using the training data.
+decision_tree_classifier.fit(X_train, y_train)
+# Use the trained model to make predictions on the test data.
+predictions = decision_tree_classifier.predict(X_test)
+# Calculate evaluating metrics
+print(f"Sklearn's Accuracy: {accuracy(y_test, predictions)}")
+print(f"Sklearn's Balanced Accuracy: {balanced_accuracy(y_test, predictions)}")
 
+plt.figure(figsize=(15, 10))
+plot_tree(
+        decision_tree_classifier,
+        feature_names=X_cols,
+        class_names=np.unique(y_train).astype(str), 
+        filled=True, rounded=True
+        )
+# plt.savefig('sklearn_tree.png')
+plt.show()
 
