@@ -294,6 +294,48 @@ class DecisionTree():
                 return self.make_prediction(x, node.left)
             else:
                 return self.make_prediction(x, node.right)
+    
+    def print_tree(self, node=None, indent=""):
+        """
+        Prints the decision tree in a readable format with rounded threshold and gain values.
+
+        Args:
+            node (Node): The current node in the tree.
+            indent (str): The indentation to show the level in the tree.
+        """
+        if node is None:
+            node = self.root
+
+        if node.value is not None:
+            print(indent + f"Leaf: Predict -> {node.value}")
+        else:
+            # Round threshold to 4 decimals, gain to 3 decimals
+            rounded_threshold = round(node.threshold, 4)
+            rounded_gain = round(node.gain, 3)
+            print(indent + f"[X{node.feature} <= {rounded_threshold}] (Gain: {rounded_gain})")
+            print(indent + "  Left:")
+            self.print_tree(node.left, indent + "    ")
+            print(indent + "  Right:")
+            self.print_tree(node.right, indent + "    ")    
+        
+    def tree_to_dict(self, node=None):
+        """
+        Converts the tree into a nested dictionary with rounded thresholds and gains for visualization.
+        """
+        if node is None:
+            node = self.root
+
+        if node.value is not None:
+            return node.value
+
+        # Round threshold to 4 decimal places and gain to 3 decimal places
+        condition = f"X{node.feature} <= {round(node.threshold, 4)} (Gain: {round(node.gain, 3)})"
+        return {
+            condition: {
+                "True": self.tree_to_dict(node.left),
+                "False": self.tree_to_dict(node.right)
+            }
+        }
 
 def data_load(file_path):
     # Identify the dataset based on the file name
@@ -471,9 +513,46 @@ X_train, X_test, y_train, y_test = train_test_split(X, y, random_state=41, test_
 
 #create model instance
 model = DecisionTree(2, 2)
-
 # Fit the decision tree model to the training data.
 model.fit(X_train, y_train)
+# Print the tree structure
+model.print_tree()
+# Convert the tree to dictionary format
+tree_dict = model.tree_to_dict()
+
+# tree visualization
+from graphviz import Digraph
+import uuid
+
+def visualize_tree(tree, parent_id=None, graph=None):
+    """Recursively visualize a decision tree from a nested dictionary with rounded values."""
+    if graph is None:
+        graph = Digraph(format='png')
+        graph.attr(size='8,8')
+
+    for node_label, branches in tree.items():
+        # Generate unique ID for each node to avoid duplicate node names
+        node_id = str(uuid.uuid4())
+        graph.node(node_id, label=f"{node_label}")
+
+        if parent_id is not None:
+            graph.edge(parent_id, node_id)
+
+        if isinstance(branches, dict):
+            for branch_label, subtree in branches.items():
+                if isinstance(subtree, dict):
+                    visualize_tree({list(subtree.keys())[0]: list(subtree.values())[0]}, node_id, graph)
+                else:
+                    # Create a unique leaf ID
+                    leaf_id = str(uuid.uuid4())
+                    graph.node(leaf_id, label=f"Predict: {subtree}", shape='box', style='filled', fillcolor='lightgray')
+                    graph.edge(node_id, leaf_id, label=f"{branch_label}")
+
+    return graph
+
+# Generate and visualize the tree
+graph = visualize_tree(tree_dict)
+# graph.render("id3_fares_tree", view=True)  # Saves and opens the image
 
 # Use the trained model to make predictions on the test data.
 predictions = model.predict(X_test)
@@ -496,6 +575,7 @@ predictions = decision_tree_classifier.predict(X_test)
 print(f"Sklearn's Accuracy: {accuracy(y_test, predictions)}")
 print(f"Sklearn's Balanced Accuracy: {balanced_accuracy(y_test, predictions)}")
 
+"""
 plt.figure(figsize=(15, 10))
 plot_tree(
         decision_tree_classifier,
@@ -505,4 +585,5 @@ plot_tree(
         )
 # plt.savefig('sklearn_tree.png')
 plt.show()
+"""
 
