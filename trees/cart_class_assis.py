@@ -184,6 +184,8 @@ class CARTClassifier(ClassificationTree):
 
         return {
             'feature_index': split['feature_index'],
+            'threshold': round(split['threshold'], 4),  # Round threshold to 4 decimal places for consistencysplit['threshold'],
+            'gain': round(split['gain'], 3),
             'threshold': split['threshold'],
             'left': left_subtree,
             'right': right_subtree
@@ -385,6 +387,50 @@ X_train, X_test, y_train, y_test = train_test_split(X, y, random_state=41, test_
 #create model instance, how about adding max_depth parameter to the model
 clf = CARTClassifier()
 clf.fit(X_train, y_train)
+
+import pprint
+pprint.pprint(clf.tree)
+
+# tree visualization
+from graphviz import Digraph
+import uuid
+
+def visualize_tree(tree, parent_id=None, graph=None):
+    """Visualize a decision tree from nested dict with feature_index, threshold, gain, left, right."""
+    if graph is None:
+        graph = Digraph(format='png')
+        graph.attr(size='8,8')
+
+    # If it's a leaf node
+    if not isinstance(tree, dict):
+        node_id = str(uuid.uuid4())
+        graph.node(node_id, label=f"Predict: {tree}", shape='box', style='filled', fillcolor='lightgray')
+        if parent_id is not None:
+            graph.edge(parent_id, node_id)
+        return graph
+
+    # Build node label with feature, threshold, and gain
+    feature = tree['feature_index']
+    threshold = round(tree['threshold'], 4)
+    gain = round(tree.get('gain', 0), 3)  # use .get in case gain is missing
+
+    node_label = f"X{feature} <= {threshold} (Gain: {gain})"
+    node_id = str(uuid.uuid4())
+    graph.node(node_id, label=node_label)
+
+    if parent_id is not None:
+        graph.edge(parent_id, node_id)
+
+    # Recurse for left and right subtrees
+    visualize_tree(tree['left'], parent_id=node_id, graph=graph)
+    visualize_tree(tree['right'], parent_id=node_id, graph=graph)
+
+    return graph
+
+graph = visualize_tree(clf.tree)
+# graph.render("CARTclass_assis", view=True)
+
+
 # Use the trained model to make predictions on the test data.
 predictions = clf.predict(X_test)
 # Calculate evaluating metrics
