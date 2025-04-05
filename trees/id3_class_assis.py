@@ -9,7 +9,12 @@ import plotly.express as px
 import pprint 
 from sklearn.preprocessing import LabelEncoder
 
-# Classification Tree base class
+"""
+This implementation demonstrates a basic ID3 classifier for classification tasks. 
+It constructs a decision tree based on information gain and uses the tree to make 
+predictions on new data.
+"""
+
 class ClassificationTree:
     """
     Base class for classification trees (also known as an abstract class).

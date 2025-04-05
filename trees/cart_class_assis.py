@@ -217,5 +217,7 @@ if __name__ == "__main__":
     classifier = CARTClassifier()
     classifier.fit(X, y)
     predictions = classifier.predict(X)
-    print(predictions)
+    print("predictions", predictions)
+    print("y", y)
+
 
