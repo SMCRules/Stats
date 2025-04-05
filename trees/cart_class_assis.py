@@ -53,6 +53,11 @@ class CARTClassifier(ClassificationTree):
     CART algorithm for classification.
     """
 
+    def __init__(self, min_samples_split=2, max_depth=3):
+        self.tree = None
+        self.min_samples_split = min_samples_split
+        self.max_depth = max_depth
+
     def fit(self, X, y):
         """
         Fit the CART classifier to the data.
@@ -151,7 +156,7 @@ class CARTClassifier(ClassificationTree):
 
         return split
 
-    def _grow_tree(self, X, y):
+    def _grow_tree(self, X, y, depth=0):
         """
         Recursively grow the decision tree.
         
@@ -166,12 +171,19 @@ class CARTClassifier(ClassificationTree):
             Grown decision tree.
         """
         y = y.flatten()
+        """
+        In CART no max_depth or any stopping condition is used
+        except, all targets are the same (len(np.unique(y)) == 1) 
+        or no gain is achieved
+        """
+        # Stopping conditions
         if len(np.unique(y)) == 1:
             return y[0]
-
-        if X.shape[1] == 0:
+        if X.shape[1] < self.min_samples_split:
             return np.bincount(y).argmax()
-
+        if depth >= self.max_depth:
+            return np.bincount(y).argmax()
+        
         split = self._best_split(X, y)
         if split['gain'] == 0:
             return np.bincount(y).argmax()
@@ -179,14 +191,13 @@ class CARTClassifier(ClassificationTree):
         left_indices = X[:, split['feature_index']] <= split['threshold']
         right_indices = X[:, split['feature_index']] > split['threshold']
 
-        left_subtree = self._grow_tree(X[left_indices], y[left_indices])
-        right_subtree = self._grow_tree(X[right_indices], y[right_indices])
+        left_subtree = self._grow_tree(X[left_indices], y[left_indices], depth + 1)
+        right_subtree = self._grow_tree(X[right_indices], y[right_indices], depth + 1)
 
         return {
             'feature_index': split['feature_index'],
             'threshold': round(split['threshold'], 4),  # Round threshold to 4 decimal places for consistencysplit['threshold'],
-            'gain': round(split['gain'], 3),
-            'threshold': split['threshold'],
+            'gain': round(split['gain'], 3),            
             'left': left_subtree,
             'right': right_subtree
         }
@@ -385,7 +396,7 @@ def balanced_accuracy(y_true, y_pred):
 X_train, X_test, y_train, y_test = train_test_split(X, y, random_state=41, test_size=0.2)
 
 #create model instance, how about adding max_depth parameter to the model
-clf = CARTClassifier()
+clf = CARTClassifier(max_depth=3, min_samples_split=20)
 clf.fit(X_train, y_train)
 
 import pprint
@@ -428,24 +439,32 @@ def visualize_tree(tree, parent_id=None, graph=None):
     return graph
 
 graph = visualize_tree(clf.tree)
-# graph.render("CARTclass_assis", view=True)
-
+# graph.render("CART_class_assis", view=True)
 
 # Use the trained model to make predictions on the test data.
 predictions = clf.predict(X_test)
 # Calculate evaluating metrics
-print(f"CART Code's Accuracy: {accuracy(y_test, predictions)}")
-print(f"CART Code's Balanced Accuracy: {balanced_accuracy(y_test, predictions)}")
+acc = accuracy(y_test, predictions)
+bal_acc = balanced_accuracy(y_test, predictions)
+
+print(f"CART Code's Accuracy: {acc:.4f}")
+print(f"CART Code's Balanced Accuracy: {bal_acc:.4f}")
 
 # sklearn implementation
 from sklearn.tree import DecisionTreeClassifier, plot_tree
 # Create a decision tree classifier model object.
-decision_tree_classifier = DecisionTreeClassifier(criterion='gini')
+decision_tree_classifier = DecisionTreeClassifier(
+    criterion='gini', 
+    max_depth=3, 
+    min_samples_split=20
+    )
 # Train the decision tree classifier model using the training data.
 decision_tree_classifier.fit(X_train, y_train)
 # Use the trained model to make predictions on the test data.
 predictions = decision_tree_classifier.predict(X_test)
 # Calculate evaluating metrics
-print(f"Sklearn's Accuracy: {accuracy(y_test, predictions)}")
-print(f"Sklearn's Balanced Accuracy: {balanced_accuracy(y_test, predictions)}")
+acc = accuracy(y_test, predictions)
+bal_acc = balanced_accuracy(y_test, predictions)
 
+print(f"Sklearn's Accuracy: {acc:.4f}")
+print(f"Sklearn's Balanced Accuracy: {bal_acc:.4f}")
