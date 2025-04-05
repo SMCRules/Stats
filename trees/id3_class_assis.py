@@ -476,7 +476,7 @@ print(f"ID3 Code's Balanced Accuracy: {balanced_accuracy(y_test, predictions)}")
 # sklearn implementation
 from sklearn.tree import DecisionTreeClassifier, plot_tree
 # Create a decision tree classifier model object.
-decision_tree_classifier = DecisionTreeClassifier()
+decision_tree_classifier = DecisionTreeClassifier(criterion='entropy')
 # Train the decision tree classifier model using the training data.
 decision_tree_classifier.fit(X_train, y_train)
 # Use the trained model to make predictions on the test data.

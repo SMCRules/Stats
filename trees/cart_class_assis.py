@@ -1,5 +1,12 @@
-
+import math
 import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+import matplotlib.pyplot as plt
+import plotly.express as px
+import pprint 
+from sklearn.preprocessing import LabelEncoder
 
 """
 This implementation demonstrates a basic CART classifier for classification tasks. 
@@ -74,7 +81,7 @@ class CARTClassifier(ClassificationTree):
 
     def _gini(self, y):
         """
-        Calculate the Gini impurity of a dataset.
+        Calculate the Gini impurity of observations in dataset.
         
         Parameters:
         y : np.ndarray
@@ -84,6 +91,7 @@ class CARTClassifier(ClassificationTree):
         float
             Gini impurity of the dataset.
         """
+        y = y.flatten()
         hist = np.bincount(y)
         ps = hist / len(y)
         return 1 - np.sum([p ** 2 for p in ps if p > 0])
@@ -157,6 +165,7 @@ class CARTClassifier(ClassificationTree):
         dict
             Grown decision tree.
         """
+        y = y.flatten()
         if len(np.unique(y)) == 1:
             return y[0]
 
@@ -200,22 +209,197 @@ class CARTClassifier(ClassificationTree):
                 node = node['right']
         return node
 
-# Example usage
-if __name__ == "__main__":
-    X = np.array([[2.771244718, 1.784783929],
-                  [1.728571309, 1.169761413],
-                  [3.678319846, 2.81281357],
-                  [3.961043357, 2.61995032],
-                  [2.999208922, 2.209014212],
-                  [7.497545867, 3.162953546],
-                  [9.00220326, 3.339047188],
-                  [7.444542326, 0.476683375],
-                  [10.12493903, 3.234550982],
-                  [6.642287351, 3.319983761]])
-    y = np.array([0, 0, 0, 0, 0, 1, 1, 1, 1, 1])
+def data_load(file_path):
+    # Identify the dataset based on the file name
+    file_name = file_path.split('/')[-1]
+    df = pd.read_csv(file_path)
+    
+    if 'breast-cancer' in file_name:        
+        # Drop the redundant 'id' column
+        df.drop('id', axis=1, inplace=True)
+        # Encode the label into binary (0/1)
+        df['diagnosis'] = (df['diagnosis'] == 'M').astype(int)
+        # Compute correlations to remove weakly correlated features
+        corr = df.corr()
+        cor_target = abs(corr["diagnosis"])
+        # Select highly correlated features (threshold = 0.25)
+        relevant_features = cor_target[cor_target > 0.25].index
+        df = df[relevant_features]
+        X_cols = df.drop('diagnosis', axis=1).columns
+        X = df.drop('diagnosis', axis=1).values
+        y = df['diagnosis'].values.reshape(-1,1)
+        
+    elif 'diabetes' in file_name:
+        X_cols = df.drop('Outcome', axis=1).columns       
+        X = df.drop('Outcome', axis=1).values
+        y = df['Outcome'].values.reshape(-1,1)
 
-    classifier = CARTClassifier()
-    classifier.fit(X, y)
-    predictions = classifier.predict(X)
-    print(predictions)
+    elif 'Iris' in file_name:        
+        # Drop the 'Id' column
+        df.drop('Id', axis=1, inplace=True)
+        # Encode the target variable with LabelEncoder
+        le = LabelEncoder()
+        df['Species'] = le.fit_transform(df['Species'])
+        X_cols = df.drop('Species', axis=1).columns
+        X = df.drop('Species', axis=1).values
+        y = df['Species'].values.reshape(-1,1)
+
+    else:
+        raise ValueError("Unsupported dataset. Please provide a valid file path.")
+    
+    return X, y, X_cols
+
+### Implementation
+X, y, X_cols = data_load('/home/miguel/Python_Projects/datasets/breast-cancer.xls')
+print(X.shape, y.shape) 
+
+# X, y, X_cols = data_load('/home/miguel/Python_Projects/datasets/Iris.csv')
+# print(X.shape, y.shape)
+
+#X, y, X_cols = data_load('/home/miguel/Python_Projects/datasets/diabetes.csv')
+#print(X.shape, y.shape)
+
+def scale(X):
+    """
+    Standardizes the data in the array X.
+
+    Parameters:
+        X (numpy.ndarray): Features array of shape (n_samples, n_features).
+
+    Returns:
+        numpy.ndarray: The standardized features array.
+    """
+    # Calculate the mean and standard deviation of each feature
+    mean = np.mean(X, axis=0)
+    std = np.std(X, axis=0)
+
+    # Standardize the data
+    X = (X - mean) / std
+
+    return X
+
+X = scale(X)
+
+def train_test_split(X, y, random_state=41, test_size=0.2):
+    """
+    Splits the data into training and testing sets.
+
+    Parameters:
+        X (numpy.ndarray): Features array of shape (n_samples, n_features).
+        y (numpy.ndarray): Target array of shape (n_samples,).
+        random_state (int): Seed for the random number generator. Default is 42.
+        test_size (float): Proportion of samples to include in the test set. Default is 0.2.
+
+    Returns:
+        Tuple[numpy.ndarray]: A tuple containing X_train, X_test, y_train, y_test.
+    """
+    # Get number of samples
+    n_samples = X.shape[0]
+
+    # Set the seed for the random number generator
+    np.random.seed(random_state)
+
+    # Shuffle the indices
+    shuffled_indices = np.random.permutation(np.arange(n_samples))
+
+    # Determine the size of the test set
+    test_size = int(n_samples * test_size)
+
+    # Split the indices into test and train
+    test_indices = shuffled_indices[:test_size]
+    train_indices = shuffled_indices[test_size:]
+
+    # Split the features and target arrays into test and train
+    X_train, X_test = X[train_indices], X[test_indices]
+    y_train, y_test = y[train_indices], y[test_indices]
+
+    return X_train, X_test, y_train, y_test   
+
+def accuracy(y_true, y_pred):
+    """
+    Computes the accuracy of a classification model.
+
+    Parameters:
+    ----------
+        y_true (numpy array): A numpy array of true labels for each data point.
+        y_pred (numpy array): A numpy array of predicted labels for each data point.
+
+    Returns:
+    ----------
+        float: The accuracy of the model
+    """
+    y_true = y_true.flatten()
+    total_samples = len(y_true)
+    correct_predictions = np.sum(y_true == y_pred)
+    return (correct_predictions / total_samples) 
+
+def balanced_accuracy(y_true, y_pred):
+    """Calculate the balanced accuracy for a multi-class classification problem.
+
+    Parameters
+    ----------
+        y_true (numpy array): A numpy array of true labels for each data point.
+        y_pred (numpy array): A numpy array of predicted labels for each data point.
+
+    Returns
+    -------
+        balanced_acc : The balanced accuracyof the model
+        
+    """
+    y_pred = np.array(y_pred)
+    y_true = y_true.flatten()
+    # Get the number of classes
+    n_classes = len(np.unique(y_true))
+
+    # Initialize an array to store the sensitivity and specificity for each class
+    sen = []
+    spec = []
+    # Loop over each class
+    for i in range(n_classes):
+        # Create a mask for the true and predicted values for class i
+        mask_true = y_true == i
+        mask_pred = y_pred == i
+
+        # Calculate the true positive, true negative, false positive, and false negative values
+        TP = np.sum(mask_true & mask_pred)
+        TN = np.sum((mask_true != True) & (mask_pred != True))
+        FP = np.sum((mask_true != True) & mask_pred)
+        FN = np.sum(mask_true & (mask_pred != True))
+
+        # Calculate the sensitivity (true positive rate) and specificity (true negative rate)
+        sensitivity = TP / (TP + FN)
+        specificity = TN / (TN + FP)
+
+        # Store the sensitivity and specificity for class i
+        sen.append(sensitivity)
+        spec.append(specificity)
+    # Calculate the balanced accuracy as the average of the sensitivity and specificity for each class
+    average_sen =  np.mean(sen)
+    average_spec =  np.mean(spec)
+    balanced_acc = (average_sen + average_spec) / n_classes
+
+    return balanced_acc
+
+X_train, X_test, y_train, y_test = train_test_split(X, y, random_state=41, test_size=0.2)
+
+#create model instance, how about adding max_depth parameter to the model
+clf = CARTClassifier()
+clf.fit(X_train, y_train)
+# Use the trained model to make predictions on the test data.
+predictions = clf.predict(X_test)
+# Calculate evaluating metrics
+print(f"CART Code's Accuracy: {accuracy(y_test, predictions)}")
+print(f"CART Code's Balanced Accuracy: {balanced_accuracy(y_test, predictions)}")
+
+# sklearn implementation
+from sklearn.tree import DecisionTreeClassifier, plot_tree
+# Create a decision tree classifier model object.
+decision_tree_classifier = DecisionTreeClassifier(criterion='gini')
+# Train the decision tree classifier model using the training data.
+decision_tree_classifier.fit(X_train, y_train)
+# Use the trained model to make predictions on the test data.
+predictions = decision_tree_classifier.predict(X_test)
+# Calculate evaluating metrics
+print(f"Sklearn's Accuracy: {accuracy(y_test, predictions)}")
+print(f"Sklearn's Balanced Accuracy: {balanced_accuracy(y_test, predictions)}")
 
