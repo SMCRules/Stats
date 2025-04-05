@@ -574,6 +574,8 @@ predictions = decision_tree_classifier.predict(X_test)
 # Calculate evaluating metrics
 print(f"Sklearn's Accuracy: {accuracy(y_test, predictions)}")
 print(f"Sklearn's Balanced Accuracy: {balanced_accuracy(y_test, predictions)}")
+# Sklearn's Accuracy: 0.9469026548672567
+# Sklearn's Balanced Accuracy: 0.9476027397260274
 
 """
 plt.figure(figsize=(15, 10))
