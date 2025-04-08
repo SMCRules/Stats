@@ -186,12 +186,18 @@ class CARTRegressor(RegressionTree):
 from sklearn.datasets import load_linnerud
 from sklearn.model_selection import train_test_split
 
-X2, y2 = load_linnerud(return_X_y=True, as_frame=True)
-y2 = y2['Pulse']
-X2_train, X2_test, y2_train, y2_test = train_test_split(X2, y2, test_size=0.2, random_state=0)
-print(X2, y2, sep='\n')
+X, y = load_linnerud(return_X_y=True, as_frame=True)
+y = y['Pulse']
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)
+X_train = X_train.to_numpy()
+X_test = X_test.to_numpy()
+y_train = y_train.to_numpy()    
+y_test = y_test.to_numpy()
+
+print(X_train, y_train, sep='\n')
 
 regressor = CARTRegressor()
-regressor.fit(X2_train, y2_train)
-predictions = regressor.predict(X2_test)
+regressor.fit(X_train, y_train)
+predictions = regressor.predict(X_test)
 print(predictions)
+print(y_test)
