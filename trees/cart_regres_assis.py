@@ -96,6 +96,7 @@ class CARTRegressor(RegressionTree):
         dict
             Best split information.
         """
+        # start with a bad mse
         best_mse = float('inf')
         split = {}
 
@@ -105,15 +106,17 @@ class CARTRegressor(RegressionTree):
             for threshold in thresholds:
                 left_indices = X_column <= threshold
                 right_indices = X_column > threshold
+                # check whether threshold leave left and right predictor values
                 if sum(left_indices) == 0 or sum(right_indices) == 0:
                     continue
-
+                # assign observations to left and right 
                 left_y, right_y = y[left_indices], y[right_indices]
+                # sample means are predictions for groups
                 left_mean = np.mean(left_y)
                 right_mean = np.mean(right_y)
                 mse = (len(left_y) * self._mean_squared_error(left_y, left_mean) +
                        len(right_y) * self._mean_squared_error(right_y, right_mean)) / len(y)
-
+                # if mse is improved, consider the split
                 if mse < best_mse:
                     best_mse = mse
                     split = {
@@ -138,11 +141,10 @@ class CARTRegressor(RegressionTree):
         dict
             Grown decision tree.
         """
-        # y = y.flatten()
-
+        # Stopping conditions: a unique dependent value
         if len(np.unique(y)) == 1:
             return y[0]
-
+        # no predictors left
         if X.shape[1] == 0:
             return np.mean(y)
 
@@ -158,7 +160,8 @@ class CARTRegressor(RegressionTree):
 
         return {
             'feature_index': split['feature_index'],
-            'threshold': split['threshold'],
+            'threshold': round(split['threshold'], 4),
+            'mse': round(split['mse'], 3),
             'left': left_subtree,
             'right': right_subtree
         }
@@ -193,11 +196,63 @@ X_train = X_train.to_numpy()
 X_test = X_test.to_numpy()
 y_train = y_train.to_numpy()    
 y_test = y_test.to_numpy()
+# print(X_train, y_train, sep='\n')
+rgr = CARTRegressor()
+rgr.fit(X_train, y_train)
 
-print(X_train, y_train, sep='\n')
+import pprint
+pprint.pprint(rgr.tree)
 
-regressor = CARTRegressor()
-regressor.fit(X_train, y_train)
-predictions = regressor.predict(X_test)
-print(predictions)
-print(y_test)
+# tree visualization
+from graphviz import Digraph
+import uuid
+
+def visualize_tree(tree, parent_id=None, graph=None):
+    """Visualize a decision tree from nested dict with feature_index, threshold, gain, left, right."""
+    if graph is None:
+        graph = Digraph(format='png')
+        graph.attr(size='8,8')
+
+    # If it's a leaf node
+    if not isinstance(tree, dict):
+        node_id = str(uuid.uuid4())
+        graph.node(node_id, label=f"Predict: {tree}", shape='box', style='filled', fillcolor='lightgray')
+        if parent_id is not None:
+            graph.edge(parent_id, node_id)
+        return graph
+
+    # Build node label with feature, threshold, and gain
+    feature = tree['feature_index']
+    threshold = round(tree['threshold'], 4)
+    gain = round(tree.get('gain', 0), 3)  # use .get in case gain is missing
+
+    node_label = f"X{feature} <= {threshold} (Gain: {gain})"
+    node_id = str(uuid.uuid4())
+    graph.node(node_id, label=node_label)
+
+    if parent_id is not None:
+        graph.edge(parent_id, node_id)
+
+    # Recurse for left and right subtrees
+    visualize_tree(tree['left'], parent_id=node_id, graph=graph)
+    visualize_tree(tree['right'], parent_id=node_id, graph=graph)
+
+    return graph
+
+graph = visualize_tree(rgr.tree)
+# graph.render("CART_regres_assis", view=True)
+
+rgr_preds = rgr.predict(X_test)
+
+### sklearn implementation
+from sklearn.tree import DecisionTreeRegressor
+from sklearn.metrics import mean_absolute_percentage_error
+
+sk_tree_regressor = DecisionTreeRegressor(random_state=0)
+sk_tree_regressor.fit(X_train, y_train)
+sk_preds = sk_tree_regressor.predict(X_test)
+sk_error = mean_absolute_percentage_error(y_test, sk_preds)
+print("sk_error: ", sk_error)
+
+rgr_error = mean_absolute_percentage_error(y_test, rgr_preds)
+print("rgr_error: ", rgr_error)
