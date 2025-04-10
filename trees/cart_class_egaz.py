@@ -334,28 +334,13 @@ def decision_boundary_plot(X, y, X_train, y_train, clf, feature_indexes, title=N
     plt.title(title)
 
 ### CLASSIFICATION DATASET
-df_path = "/home/miguel/Python_Projects/datasets/Iris.csv"
+df_path = "/home/miguel/Python_Projects/datasets/iris.csv"
 iris = pd.read_csv(df_path)
 X1, y1 = iris.iloc[:, :-1], iris.iloc[:, -1]
-X1_train, X1_test, y1_train, y1_test = train_test_split(X1, y1, test_size=0.3, random_state=0)
+X1_train, X1_test, y1_train, y1_test = train_test_split(
+    X1, y1, test_size=0.3, random_state=0
+    )
 # print(iris)
-
-### REGRESSION DATASET
-"""
-Linear Regression on Boston Dataset - House price
-https://www.kaggle.com/code/mennaahmad/bostonmlp
-df_path = "/kaggle/input/boston-dataset/boston.csv"
-boston = pd.read_csv(df_path)
-X2, y2 = boston.iloc[:, :-1], boston.iloc[:, -1]
-X2_train, X2_test, y2_train, y2_test = train_test_split(X2, y2, test_size=0.3, random_state=0)
-print(boston)
-"""
-"""
-X2, y2 = load_linnerud(return_X_y=True, as_frame=True)
-y2 = y2['Pulse']
-X2_train, X2_test, y2_train, y2_test = train_test_split(X2, y2, test_size=0.2, random_state=0)
-print(X2, y2, sep='\n')
-"""
 
 ### Classification before pruning
 tree_classifier = DecisionTreeCART()
@@ -377,7 +362,6 @@ pprint(tree_classifier.tree, width=180)
 tree_plot(sk_tree_classifier, X1_train)
 print(f'tree alphas: {clf_ccp_alphas}', f'sklearn alphas: {sk_clf_ccp_alphas}', sep='\n')
 tree_scores_plot(sk_clf_estimator, clf_ccp_alphas, train1_data, test1_data, metric, labels)
-
 
 ### Classification after pruning
 tree_clf_prediction = tree_classifier.predict(X1_test)
@@ -433,64 +417,4 @@ for i, alpha in enumerate(clf_ccp_alphas):
         X1, y1, X1_train, y1_train, 
         sk_tree_clf, feature_indexes, title
         )
-
-### Regression before pruning
-tree_regressor = DecisionTreeCART(regression=True)
-tree_regressor.fit(X2_train, y2_train)
-reg_ccp_alphas, _ = tree_regressor.cost_complexity_pruning_path(X2_train, y2_train)
-reg_ccp_alphas = reg_ccp_alphas[:-1]
-
-sk_tree_regressor = DecisionTreeRegressor(random_state=0)
-sk_tree_regressor.fit(X2_train, y2_train)
-sk_reg_path = sk_tree_regressor.cost_complexity_pruning_path(X2_train, y2_train)
-sk_reg_ccp_alphas = sk_reg_path.ccp_alphas[:-1]
-
-reg_estimator = DecisionTreeCART(regression=True)
-sk_reg_estimator = DecisionTreeRegressor(random_state=0)
-train2_data, test2_data = [X2_train, y2_train], [X2_test, y2_test]
-metric = mean_absolute_percentage_error
-labels = ['Alpha', 'MAPE']
-
-pprint(tree_regressor.tree)
-tree_plot(sk_tree_regressor, X2_train)
-
-print(f'CART alphas: {reg_ccp_alphas}')
-tree_scores_plot(
-    reg_estimator, reg_ccp_alphas, train2_data, 
-    test2_data, metric, labels
-    )
-print(f'sklearn_alphas: {sk_reg_ccp_alphas}')
-tree_scores_plot(
-    sk_reg_estimator, sk_reg_ccp_alphas, train2_data, 
-    test2_data, metric, labels
-    )
-
-
-### Regression after pruning
-tree_reg_prediction = tree_regressor.predict(X2_test)
-tree_reg_error = mean_absolute_percentage_error(y2_test, tree_reg_prediction)
-sk_tree_reg_prediction = sk_tree_regressor.predict(X2_test)
-sk_reg_error= mean_absolute_percentage_error(y2_test, sk_tree_reg_prediction)
-
-best_reg_ccp_alpha = 3.613   # based on a plot
-best_tree_regressor = DecisionTreeCART(ccp_alpha=best_reg_ccp_alpha, regression=True)
-best_tree_regressor.fit(X2_train, y2_train)
-best_tree_reg_prediction = best_tree_regressor.predict(X2_test)
-lowest_tree_reg_error = mean_absolute_percentage_error(y2_test, best_tree_reg_prediction)
-
-best_sk_tree_regressor = DecisionTreeRegressor(random_state=0, ccp_alpha=best_reg_ccp_alpha)
-best_sk_tree_regressor.fit(X2_train, y2_train)
-best_sk_tree_reg_prediction = best_sk_tree_regressor.predict(X2_test)
-lowest_sk_reg_error = mean_absolute_percentage_error(y2_test, best_sk_tree_reg_prediction)
-
-print('tree prediction', tree_reg_prediction, ' ', sep='\n')
-print('sklearn prediction', sk_tree_reg_prediction, ' ', sep='\n')
-print('best tree prediction', best_tree_reg_prediction, ' ', sep='\n')
-print('best sklearn prediction', best_sk_tree_reg_prediction, ' ', sep='\n')
-
-pprint(best_tree_regressor.tree)
-tree_plot(best_sk_tree_regressor, X2_train)
-print(f'tree error: before {tree_reg_error} -> after pruning {lowest_tree_reg_error}')
-print(f'sklearn tree error: before {sk_reg_error} -> after pruning {lowest_sk_reg_error}')
-
 
