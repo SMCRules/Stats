@@ -10,6 +10,19 @@ from mlxtend.plotting import plot_decision_regions
 from copy import deepcopy
 from pprint import pprint
 
+"""
+Decision tree consists of the root node, branches (left and right), 
+decision and leaf (terminal) nodes. 
+The root and decision nodes are questions with a threshold value for dividing 
+the training set into parts (left and right), 
+and the leaves are the final predictions: 
+for regression the average of the values of the training set 
+for classification the statistical mode.
+
+The best split in the decision node optimizes a measure of node impurity. 
+In the case of classification, the following criteria are used to assess the quality of node splittig:
+"""
+
 class DecisionTreeCART:
 
     def __init__(self, max_depth=100, min_samples=2, ccp_alpha=0.0, regression=False):
@@ -321,26 +334,28 @@ def decision_boundary_plot(X, y, X_train, y_train, clf, feature_indexes, title=N
     plt.title(title)
 
 ### CLASSIFICATION DATASET
-df_path = "/kaggle/input/iris-dataset/iris.csv"
+df_path = "/home/miguel/Python_Projects/datasets/Iris.csv"
 iris = pd.read_csv(df_path)
 X1, y1 = iris.iloc[:, :-1], iris.iloc[:, -1]
 X1_train, X1_test, y1_train, y1_test = train_test_split(X1, y1, test_size=0.3, random_state=0)
-print(iris)
+# print(iris)
 
 ### REGRESSION DATASET
 """
+Linear Regression on Boston Dataset - House price
+https://www.kaggle.com/code/mennaahmad/bostonmlp
 df_path = "/kaggle/input/boston-dataset/boston.csv"
 boston = pd.read_csv(df_path)
 X2, y2 = boston.iloc[:, :-1], boston.iloc[:, -1]
 X2_train, X2_test, y2_train, y2_test = train_test_split(X2, y2, test_size=0.3, random_state=0)
 print(boston)
 """
-
+"""
 X2, y2 = load_linnerud(return_X_y=True, as_frame=True)
 y2 = y2['Pulse']
 X2_train, X2_test, y2_train, y2_test = train_test_split(X2, y2, test_size=0.2, random_state=0)
 print(X2, y2, sep='\n')
-
+"""
 
 ### Classification before pruning
 tree_classifier = DecisionTreeCART()
