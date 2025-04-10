@@ -122,12 +122,12 @@ class CARTRegressor(RegressionTree):
         
         Returns:
         dict
-            Best split information.
+            best_split information.
         """
         # bad mse
         best_mse = float('inf')
         # always return a complete dictionary, even if no valid split is found
-        # avoid an empty dictionary split = {}
+        # avoid returning an empty dictionary split = {}
         best_split = {
             'feature_index': None,
             'threshold': None,
@@ -142,7 +142,9 @@ class CARTRegressor(RegressionTree):
                 left_indices = X_column <= threshold
                 right_indices = X_column > threshold
 
-                if sum(left_indices) < self.min_samples_split or sum(right_indices) < self.min_samples_split:
+                if sum(
+                    left_indices) < self.min_samples_split or sum(
+                        right_indices) < self.min_samples_split:
                     continue
 
                 left_y, right_y = y[left_indices], y[right_indices]
@@ -281,7 +283,7 @@ def visualize_tree(tree, parent_id=None, graph=None):
     return graph
 
 graph = visualize_tree(rgr.tree)
-graph.render("CART_regres_pruning_assis", view=True)
+# graph.render("CART_regres_pruning_assis", view=True)
 rgr_preds = rgr.predict(X_test)
 
 
