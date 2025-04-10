@@ -318,20 +318,37 @@ def tree_scores_plot(estimator, ccp_alphas, train_data, test_data, metric, label
     plt.show()
 
 
-def decision_boundary_plot(X, y, X_train, y_train, clf, feature_indexes, title=None):
+def decision_boundary_plot(X, y, X_train, y_train, clf, feature_indexes, title=None, ax=None):
+    # Ensure labels are encoded as integers
     if y.dtype != 'int':
         y = pd.Series(LabelEncoder().fit_transform(y))
         y_train = pd.Series(LabelEncoder().fit_transform(y_train))
 
+    # Extract feature names and data
     feature1_name, feature2_name = X.columns[feature_indexes]
     X_feature_columns = X.values[:, feature_indexes]
     X_train_feature_columns = X_train.values[:, feature_indexes]
+
+    # Train classifier
     clf.fit(X_train_feature_columns, y_train.values)
 
-    plot_decision_regions(X=X_feature_columns, y=y.values, clf=clf)
-    plt.xlabel(feature1_name)
-    plt.ylabel(feature2_name)
-    plt.title(title)
+    # Create new plot if ax is not provided
+    if ax is None:
+        fig, ax = plt.subplots(figsize=(6, 4))
+
+    # Plot decision regions
+    plot_decision_regions(X=X_feature_columns, y=y.values, clf=clf, ax=ax)
+
+    # Annotate plot
+    ax.set_xlabel(feature1_name)
+    ax.set_ylabel(feature2_name)
+    if title:
+        ax.set_title(title)
+
+    # Show plot only if this isn't part of a subplot grid
+    if ax is None:
+        plt.tight_layout()
+        plt.show()
 
 ### CLASSIFICATION DATASET
 df_path = "/home/miguel/Python_Projects/datasets/iris.csv"
@@ -397,24 +414,23 @@ decision_boundary_plot(
     X1, y1, X1_train, y1_train, 
     sk_tree_classifier, feature_indexes, title1
     )
-
+    
 feature_indexes = [2, 3]
 title2 = 'Classification tree surface after pruning'
 decision_boundary_plot(
-    X1, y1, X1_train, y1_train,
+    X1, y1, X1_train, y1_train, 
     best_sk_tree_classifier, feature_indexes, title2
     )
 
-feature_indexes = [2, 3]
-plt.figure(figsize=(10, 15))
+
+fig, axes = plt.subplots(3, 2, figsize=(10, 15))
+plt.subplots_adjust(hspace=0.5)
 
 for i, alpha in enumerate(clf_ccp_alphas):
-    sk_tree_clf = DecisionTreeClassifier(random_state=0, ccp_alpha=alpha)
-    plt.subplot(3, 2, i + 1)
-    plt.subplots_adjust(hspace=0.5)
+    row, col = divmod(i, 2)
+    ax = axes[row][col]
+    clf = DecisionTreeClassifier(random_state=0, ccp_alpha=alpha)
     title = f'ccp_alpha = {alpha}'
-    decision_boundary_plot(
-        X1, y1, X1_train, y1_train, 
-        sk_tree_clf, feature_indexes, title
-        )
+    decision_boundary_plot(X1, y1, X1_train, y1_train, clf, feature_indexes, title, ax=ax)
 
+plt.show()
