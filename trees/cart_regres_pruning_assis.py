@@ -111,7 +111,23 @@ class CARTRegressor(RegressionTree):
         return np.mean((y_true - y_pred) ** 2)
 
     def _best_split(self, X, y):
+        """
+        Find the best split for a dataset.
+        
+        Parameters:
+        X : np.ndarray
+            Feature matrix.
+        y : np.ndarray
+            Target vector.
+        
+        Returns:
+        dict
+            Best split information.
+        """
+        # bad mse
         best_mse = float('inf')
+        # always return a complete dictionary, even if no valid split is found
+        # avoid an empty dictionary split = {}
         best_split = {
             'feature_index': None,
             'threshold': None,
