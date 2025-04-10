@@ -318,13 +318,14 @@ def tree_scores_plot(estimator, ccp_alphas, train_data, test_data, metric, label
     plt.show()
 
 ### REGRESSION DATASET
-"""
+
 X2, y2 = load_linnerud(return_X_y=True, as_frame=True)
 y2 = y2['Pulse']
 X2_train, X2_test, y2_train, y2_test = train_test_split(X2, y2, test_size=0.2, random_state=0)
-print(X2, y2, sep='\n')
-"""
+# print(X2, y2, sep='\n')
 
+
+"""
 # Linear Regression on Boston Dataset - House price
 # https://www.kaggle.com/code/mennaahmad/bostonmlp
 df_path = "/home/miguel/Python_Projects/datasets/Boston.xls"
@@ -333,6 +334,8 @@ boston = pd.read_csv(df_path)
 X2 = boston.drop(['Unnamed: 0', 'medv'], axis=1)  
 y2 = boston['medv']
 X2_train, X2_test, y2_train, y2_test = train_test_split(X2, y2, test_size=0.2, random_state=0)
+# print(X2, y2, sep='\n')
+"""
 
 ### Regression before pruning
 tree_regressor = DecisionTreeCART(regression=True)
