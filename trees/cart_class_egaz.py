@@ -434,3 +434,29 @@ for i, alpha in enumerate(clf_ccp_alphas):
     decision_boundary_plot(X1, y1, X1_train, y1_train, clf, feature_indexes, title, ax=ax)
 
 plt.show()
+
+"""
+scikit-learn implementation to select best alpha:
+
+In DecisionTreeClassifier or DecisionTreeRegressor, you'd do:
+
+path = clf.cost_complexity_pruning_path(X_train, y_train)
+ccp_alphas, impurities = path.ccp_alphas, path.impurities
+
+# Cross-validation scores for each alpha
+from sklearn.model_selection import cross_val_score
+
+cv_scores = []
+for alpha in ccp_alphas:
+    clf_pruned = DecisionTreeClassifier(ccp_alpha=alpha)
+    scores = cross_val_score(clf_pruned, X_train, y_train, cv=5)
+    cv_scores.append(scores.mean())
+
+# Pick alpha with best cv score
+best_alpha = ccp_alphas[np.argmax(cv_scores)]
+
+# Train final pruned tree
+final_tree = DecisionTreeClassifier(ccp_alpha=best_alpha)
+final_tree.fit(X_train, y_train)
+
+"""
