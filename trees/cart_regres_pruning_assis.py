@@ -13,16 +13,16 @@ from sklearn.datasets import load_linnerud
     These optimizations can help make the CART regressor more efficient and 
     robust, especially when working with large datasets.
 
+    Pre-pruning limits the growth of the tree during construction by 
+    the stop criteria:
+
    * Maximum Depth (max_depth): Limits the depth of the tree to prevent it 
     from growing too complex. This helps in reducing overfitting and 
     improves generalization.
    * Minimum Samples Split (min_samples_split): Ensures that a node must have 
     at least a certain number of samples before it can be split. 
     This prevents the model from creating overly specific branches that 
-    may not generalize well.
-   * Efficient Split Evaluation: The _best_split method is optimized 
-    to handle only feasible splits by checking the minimum number of 
-    samples required for a split.
+    may not generalize well.   
 """
 
 import numpy as np
@@ -111,7 +111,23 @@ class CARTRegressor(RegressionTree):
         return np.mean((y_true - y_pred) ** 2)
 
     def _best_split(self, X, y):
+        """
+        Find the best split for a dataset.
+        
+        Parameters:
+        X : np.ndarray
+            Feature matrix.
+        y : np.ndarray
+            Target vector.
+        
+        Returns:
+        dict
+            best_split information.
+        """
+        # bad mse
         best_mse = float('inf')
+        # always return a complete dictionary, even if no valid split is found
+        # avoid returning an empty dictionary split = {}
         best_split = {
             'feature_index': None,
             'threshold': None,
@@ -126,7 +142,9 @@ class CARTRegressor(RegressionTree):
                 left_indices = X_column <= threshold
                 right_indices = X_column > threshold
 
-                if sum(left_indices) < self.min_samples_split or sum(right_indices) < self.min_samples_split:
+                if sum(
+                    left_indices) < self.min_samples_split or sum(
+                        right_indices) < self.min_samples_split:
                     continue
 
                 left_y, right_y = y[left_indices], y[right_indices]
@@ -265,7 +283,7 @@ def visualize_tree(tree, parent_id=None, graph=None):
     return graph
 
 graph = visualize_tree(rgr.tree)
-graph.render("CART_regres_pruning_assis", view=True)
+# graph.render("CART_regres_pruning_assis", view=True)
 rgr_preds = rgr.predict(X_test)
 
 

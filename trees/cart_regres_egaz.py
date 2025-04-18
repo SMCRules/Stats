@@ -10,6 +10,19 @@ from mlxtend.plotting import plot_decision_regions
 from copy import deepcopy
 from pprint import pprint
 
+"""
+Decision tree consists of the root node, branches (left and right), 
+decision and leaf (terminal) nodes. 
+The root and decision nodes are questions with a threshold value for dividing 
+the training set into parts (left and right), 
+and the leaves are the final predictions: 
+for regression the average of the values of the training set 
+for classification the statistical mode.
+
+The best split in the decision node optimizes a measure of node impurity. 
+In the case of classification, the following criteria are used to assess the quality of node splittig:
+"""
+
 class DecisionTreeCART:
 
     def __init__(self, max_depth=100, min_samples=2, ccp_alpha=0.0, regression=False):
@@ -304,120 +317,25 @@ def tree_scores_plot(estimator, ccp_alphas, train_data, test_data, metric, label
     ax.legend()
     plt.show()
 
-
-def decision_boundary_plot(X, y, X_train, y_train, clf, feature_indexes, title=None):
-    if y.dtype != 'int':
-        y = pd.Series(LabelEncoder().fit_transform(y))
-        y_train = pd.Series(LabelEncoder().fit_transform(y_train))
-
-    feature1_name, feature2_name = X.columns[feature_indexes]
-    X_feature_columns = X.values[:, feature_indexes]
-    X_train_feature_columns = X_train.values[:, feature_indexes]
-    clf.fit(X_train_feature_columns, y_train.values)
-
-    plot_decision_regions(X=X_feature_columns, y=y.values, clf=clf)
-    plt.xlabel(feature1_name)
-    plt.ylabel(feature2_name)
-    plt.title(title)
-
-### CLASSIFICATION DATASET
-df_path = "/kaggle/input/iris-dataset/iris.csv"
-iris = pd.read_csv(df_path)
-X1, y1 = iris.iloc[:, :-1], iris.iloc[:, -1]
-X1_train, X1_test, y1_train, y1_test = train_test_split(X1, y1, test_size=0.3, random_state=0)
-print(iris)
-
 ### REGRESSION DATASET
-"""
-df_path = "/kaggle/input/boston-dataset/boston.csv"
-boston = pd.read_csv(df_path)
-X2, y2 = boston.iloc[:, :-1], boston.iloc[:, -1]
-X2_train, X2_test, y2_train, y2_test = train_test_split(X2, y2, test_size=0.3, random_state=0)
-print(boston)
-"""
 
 X2, y2 = load_linnerud(return_X_y=True, as_frame=True)
 y2 = y2['Pulse']
 X2_train, X2_test, y2_train, y2_test = train_test_split(X2, y2, test_size=0.2, random_state=0)
-print(X2, y2, sep='\n')
+# print(X2, y2, sep='\n')
 
 
-### Classification before pruning
-tree_classifier = DecisionTreeCART()
-tree_classifier.fit(X1_train, y1_train)
-clf_ccp_alphas, _ = tree_classifier.cost_complexity_pruning_path(X1_train, y1_train)
-clf_ccp_alphas = clf_ccp_alphas[:-1]
-
-sk_tree_classifier = DecisionTreeClassifier(random_state=0)
-sk_tree_classifier.fit(X1_train, y1_train)
-sk_clf_path = sk_tree_classifier.cost_complexity_pruning_path(X1_train, y1_train)
-sk_clf_ccp_alphas = sk_clf_path.ccp_alphas[:-1]
-
-sk_clf_estimator = DecisionTreeClassifier(random_state=0)
-train1_data, test1_data = [X1_train, y1_train], [X1_test, y1_test]
-metric = accuracy_score
-labels = ['Alpha', 'Accuracy']
-
-pprint(tree_classifier.tree, width=180)
-tree_plot(sk_tree_classifier, X1_train)
-print(f'tree alphas: {clf_ccp_alphas}', f'sklearn alphas: {sk_clf_ccp_alphas}', sep='\n')
-tree_scores_plot(sk_clf_estimator, clf_ccp_alphas, train1_data, test1_data, metric, labels)
-
-
-### Classification after pruning
-tree_clf_prediction = tree_classifier.predict(X1_test)
-tree_clf_accuracy = accuracy_score(y1_test, tree_clf_prediction)
-sk_tree_clf_prediction = sk_tree_classifier.predict(X1_test)
-sk_clf_accuracy = accuracy_score(y1_test, sk_tree_clf_prediction)
-
-best_clf_ccp_alpha = 0.0143 # based on a plot
-best_tree_classifier = DecisionTreeCART(ccp_alpha=best_clf_ccp_alpha)
-best_tree_classifier.fit(X1_train, y1_train)
-best_tree_clf_prediction = best_tree_classifier.predict(X1_test)
-best_tree_clf_accuracy = accuracy_score(y1_test, best_tree_clf_prediction)
-
-best_sk_tree_classifier = DecisionTreeClassifier(random_state=0, ccp_alpha=best_clf_ccp_alpha)
-best_sk_tree_classifier.fit(X1_train, y1_train)
-best_sk_tree_clf_prediction = best_sk_tree_classifier.predict(X1_test)
-best_sk_clf_accuracy = accuracy_score(y1_test, best_sk_tree_clf_prediction)
-
-print('tree prediction', tree_clf_prediction, ' ', sep='\n')
-print('sklearn prediction', sk_tree_clf_prediction, ' ', sep='\n')
-print('best tree prediction', best_tree_clf_prediction, ' ', sep='\n')
-print('best sklearn prediction', best_sk_tree_clf_prediction, ' ', sep='\n')
-
-pprint(best_tree_classifier.tree, width=180)
-tree_plot(best_sk_tree_classifier, X1_train)
-print(f'our tree pruning accuracy: before {tree_clf_accuracy} -> after {best_tree_clf_accuracy}')
-print(f'sklearn tree pruning accuracy: before {sk_clf_accuracy} -> after {best_sk_clf_accuracy}')
-
-# Pruning at different ccp alpha
-feature_indexes = [2, 3]
-title1 = 'Classification tree surface before pruning'
-decision_boundary_plot(
-    X1, y1, X1_train, y1_train, 
-    sk_tree_classifier, feature_indexes, title1
-    )
-
-feature_indexes = [2, 3]
-title2 = 'Classification tree surface after pruning'
-decision_boundary_plot(
-    X1, y1, X1_train, y1_train,
-    best_sk_tree_classifier, feature_indexes, title2
-    )
-
-feature_indexes = [2, 3]
-plt.figure(figsize=(10, 15))
-
-for i, alpha in enumerate(clf_ccp_alphas):
-    sk_tree_clf = DecisionTreeClassifier(random_state=0, ccp_alpha=alpha)
-    plt.subplot(3, 2, i + 1)
-    plt.subplots_adjust(hspace=0.5)
-    title = f'ccp_alpha = {alpha}'
-    decision_boundary_plot(
-        X1, y1, X1_train, y1_train, 
-        sk_tree_clf, feature_indexes, title
-        )
+"""
+# Linear Regression on Boston Dataset - House price
+# https://www.kaggle.com/code/mennaahmad/bostonmlp
+df_path = "/home/miguel/Python_Projects/datasets/Boston.xls"
+boston = pd.read_csv(df_path)
+# print(boston.info())
+X2 = boston.drop(['Unnamed: 0', 'medv'], axis=1)  
+y2 = boston['medv']
+X2_train, X2_test, y2_train, y2_test = train_test_split(X2, y2, test_size=0.2, random_state=0)
+# print(X2, y2, sep='\n')
+"""
 
 ### Regression before pruning
 tree_regressor = DecisionTreeCART(regression=True)
@@ -449,7 +367,6 @@ tree_scores_plot(
     sk_reg_estimator, sk_reg_ccp_alphas, train2_data, 
     test2_data, metric, labels
     )
-
 
 ### Regression after pruning
 tree_reg_prediction = tree_regressor.predict(X2_test)
