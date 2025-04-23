@@ -126,6 +126,9 @@ class DecisionTreeCART:
 
     @staticmethod
     def _cost_function(left_df, right_df, method):
+        """
+        Weighted average of binary split depending on method (Gini or MSE)
+        """
         total_df_size = left_df.size + right_df.size
         p_left_df = left_df.size / total_df_size
         p_right_df = right_df.size / total_df_size
@@ -136,6 +139,13 @@ class DecisionTreeCART:
         return J  # weighted Gini impurity or weighted mse (depends on a method)
 
     def _node_error_rate(self, y, method):
+        """
+        self._num_all_samples: stores the total number of training samples (y.size) 
+        at the root of the tree. It is used to compute the weighted error of any 
+        subtree or node relative to the entire dataset.
+        When calculating errors for cost-complexity pruning, 
+        errors must be normalized to account for sample sizes.
+        """
         if self._num_all_samples is None:
             self._num_all_samples = y.size   # num samples of all dataframe
         current_num_samples = y.size
