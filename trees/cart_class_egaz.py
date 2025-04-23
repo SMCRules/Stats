@@ -75,18 +75,38 @@ class DecisionTreeCART:
         False if the node is a decision node 
         (like {"feature": ..., "threshold": ..., "left": ..., "right": ...})
         """
-        return not isinstance(node, dict)   # if a node/tree is a leaf
+        return not isinstance(node, dict)   # True if a node/tree is a leaf
 
     def _leaf_node(self, y):
+        """
+        for computing the value that a leaf node should return, and it behaves 
+        differently depending on whether its for regression or classification
+        """
         class_index = 0
 
         return np.mean(y) if self.regression else y.mode()[class_index]
 
     def _split_df(self, X, y, feature, threshold):
+        """
+        performing a binary split on the dataset based on 
+        a given feature and threshold.
+        Inputs:
+        X: Feature matrix (Pandas DataFrame)
+        y: Target vector
+        feature: The name or index of the feature to split on
+        threshold: The value at which to split that feature
+        """
         feature_values = X[feature]
         left_indexes = X[feature_values <= threshold].index
         right_indexes = X[feature_values > threshold].index
         sizes = np.array([left_indexes.size, right_indexes.size])
+        """
+        If either side has 0 samples (i.e. a bad or invalid split), 
+        then it doesnt split at all — instead, it returns a leaf node 
+        with the prediction for this branch by calling self._leaf_node(y).
+        Otherwise, it returns the two sets of indexes that define 
+        left and right splits.
+        """
 
         return self._leaf_node(y) if any(sizes == 0) else left_indexes, right_indexes
 
