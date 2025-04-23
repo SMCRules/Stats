@@ -47,6 +47,12 @@ class DecisionTreeCART:
         self._num_all_samples = None
 
     def _set_df_type(self, X, y, dtype):
+        """
+        A data preparation utility function inside custom decision tree class.
+        It makes sure that:
+        The feature matrix X is explicitly cast to a desired numerical type.
+        The target vector y is also cast, but only in case of regression.
+        """
         X = X.astype(dtype)
         y = y.astype(dtype) if self.regression else y
         self._y_dtype = y.dtype
@@ -61,6 +67,14 @@ class DecisionTreeCART:
 
     @staticmethod
     def _is_leaf_node(node):
+        """
+        It checks whether the input node is a leaf node, so it does not split further.
+        
+        The not isinstance(node, dict) part returns:
+        True if the node is a leaf (like a class label or regression value)
+        False if the node is a decision node 
+        (like {"feature": ..., "threshold": ..., "left": ..., "right": ...})
+        """
         return not isinstance(node, dict)   # if a node/tree is a leaf
 
     def _leaf_node(self, y):
