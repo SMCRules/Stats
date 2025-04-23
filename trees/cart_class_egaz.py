@@ -26,12 +26,24 @@ In the case of classification, the following criteria are used to assess the qua
 class DecisionTreeCART:
 
     def __init__(self, max_depth=100, min_samples=2, ccp_alpha=0.0, regression=False):
-        self.max_depth = max_depth
-        self.min_samples = min_samples
+        # maximum depth of the tree (prevent overfitting).
+        self.max_depth = max_depth 
+        # minimum number of samples required to split a node (prevent overfitting)
+        self.min_samples = min_samples 
+        # cost complexity pruning alpha (regularization).
+        # A higher value means more aggressive pruning.
         self.ccp_alpha = ccp_alpha
+        # Boolean flag to indicate whether the tree is for regression (True) 
+        # or classification (False).
         self.regression = regression
+        # A placeholder to store the final tree structure 
+        # (likely a nested dictionary or a Node class), once built.
         self.tree = None
+        # store the type of the target y (e.g., str, int, or float), 
+        # which might be used for prediction formatting or logic branching.
         self._y_type = None
+        # total number of samples in the training data, 
+        # for pruning or normalization purposes.
         self._num_all_samples = None
 
     def _set_df_type(self, X, y, dtype):
