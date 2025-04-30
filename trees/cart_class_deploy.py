@@ -16,7 +16,8 @@ best_alpha = 0.0143
 final_tree = DecisionTreeClassifier(ccp_alpha=best_alpha, random_state=0)
 final_tree.fit(X1_train, y1_train)
 final_tree_prediction = final_tree.predict(X1_test[:3])
-print("final_tree_prediction ", final_tree_prediction)
+# print("predictors: ", X1_test[:3])
+# print("final_tree_prediction ", final_tree_prediction)
 # final_tree_prediction  ['virginica' 'versicolor' 'setosa']
 
 
