@@ -370,12 +370,15 @@ def data_load(file_path):
         df = df[relevant_features]
         X_cols = df.drop('diagnosis', axis=1).columns
         X = df.drop('diagnosis', axis=1).values
-        y = df['diagnosis'].values.reshape(-1,1)
+        # y = df['diagnosis'].values.reshape(-1,1) => it was breaking cost = (-1/m)... 
+        y = df['diagnosis'].values
+
         
     elif 'diabetes' in file_name:
         X_cols = df.drop('Outcome', axis=1).columns       
         X = df.drop('Outcome', axis=1).values
-        y = df['Outcome'].values.reshape(-1,1)
+        # y = df['Outcome'].values.reshape(-1,1)
+        y = df['Outcome'].values
 
     elif 'Iris' in file_name:        
         # Drop the 'Id' column
@@ -385,7 +388,9 @@ def data_load(file_path):
         df['Species'] = le.fit_transform(df['Species'])
         X_cols = df.drop('Species', axis=1).columns
         X = df.drop('Species', axis=1).values
-        y = df['Species'].values.reshape(-1,1)
+        # y = df['Species'].values.reshape(-1,1)
+        y = df['Species'].values
+
 
     else:
         raise ValueError("Unsupported dataset. Please provide a valid file path.")
@@ -453,4 +458,98 @@ print(X.shape, y.shape)
 
 X = scale(X)
 X_train, X_test, y_train, y_test = train_test_split(X, y, random_state=42, test_size=0.2)
+
+def train_evaluate_model(X_train, y_train, X_test, y_test, learning_rate, layer_dimensions, epochs):
+    '''
+    Keyword arguments:
+    X_train -- Training data
+    y_train -- Traing labels
+    X_train -- test data
+    y_train -- test labels
+    layer_dimensions -- python array (list) containing the dimensions of each layer in our network
+    learning_rate --  learning rate of the network.
+    Epochs -- number of iterations of the optimization loop
+    returns a dataframe 
+    '''
+    # create model instance with the given hyperparameters
+    model = NeuralNetwork(learning_rate=learning_rate,layer_dimensions=layers)
+    # fit the model
+    model.fit(X_train, y_train,epochs=epochs,print_cost=False)
+    accuracy, predictions = model.predict(X_test, y_test) # calculate accuracy and predictions
+    
+    #create a dataframe to visualize the results
+    eval_df = pd.DataFrame([[learning_rate, layer_dimensions, epochs, accuracy]], columns=['Learning_Rate', 'Layers', 'Epochs', 'Accuracy'])
+    return eval_df
+
+learning_rate = 0.001
+layers = [25,1,1]
+epochs = 3000
+results = train_evaluate_model(X_train, y_train, X_test, y_test, learning_rate=learning_rate, layer_dimensions=layers, epochs=epochs)
+results.index = ['Model_1']
+# results.style.background_gradient(cmap =sns.cubehelix_palette(start=.5, rot=-.5, as_cmap=True))
+
+learning_rate = 0.001
+layers = [25,16,1]
+epochs = 3000
+temp_df2 = train_evaluate_model(X_train, y_train, X_test, y_test, learning_rate=learning_rate, layer_dimensions=layers, epochs=epochs)
+temp_df2.index = ['Model_2']
+#results = results.append(temp_df)
+
+learning_rate = 0.0001
+layers = [25,16,1]
+epochs = 3000
+temp_df3 = train_evaluate_model(X_train, y_train, X_test, y_test, learning_rate=learning_rate, layer_dimensions=layers, epochs=epochs)
+temp_df3.index = ['Model_3']
+#results = results.append(temp_df)
+
+learning_rate = 0.0001
+layers = [25,16,1]
+epochs = 30000
+temp_df4 = train_evaluate_model(X_train, y_train, X_test, y_test, learning_rate=learning_rate, layer_dimensions=layers, epochs=epochs)
+temp_df4.index = ['Model_4']
+#results = results.append(temp_df)
+
+learning_rate = 0.0001
+layers = [25,16,16,1]
+epochs = 30000
+temp_df5 = train_evaluate_model(X_train, y_train, X_test, y_test, learning_rate=learning_rate, layer_dimensions=layers, epochs=epochs)
+temp_df5.index = ['Model_5']
+#results = results.append(temp_df)
+
+learning_rate = 0.0001
+layers = [25,16,16,16,1]
+epochs = 30000
+temp_df6 = train_evaluate_model(X_train, y_train, X_test, y_test, learning_rate=learning_rate, layer_dimensions=layers, epochs=epochs)
+temp_df6.index = ['Model_6']
+#results = results.append(temp_df)
+
+learning_rate = 0.0001
+layers = [25,32,32,1]
+epochs = 30000
+temp_df7 = train_evaluate_model(X_train, y_train, X_test, y_test, learning_rate=learning_rate, layer_dimensions=layers, epochs=epochs)
+temp_df7.index = ['Model_7']
+#results = results.append(temp_df)
+
+learning_rate = 0.0001
+layers = [25,128,128,1]
+epochs = 30000
+temp_df8 = train_evaluate_model(X_train, y_train, X_test, y_test, learning_rate=learning_rate, layer_dimensions=layers, epochs=epochs)
+temp_df8.index = ['Model_8']
+#results = results.append(temp_df)
+
+# Using pd.concat instead of append
+results = pd.concat(
+    [results, temp_df2, temp_df3, temp_df4, 
+    temp_df5, temp_df6, temp_df7, temp_df8]
+    )
+
+print(results.to_string())
+
+model = NeuralNetwork(learning_rate=0.0001)
+model.fit(X_train, y_train,epochs=30000,print_cost=True)
+accuracy,predictions = model.predict(X_test, y_test)
+print("Accuracy: ", accuracy)
+
+
+
 
