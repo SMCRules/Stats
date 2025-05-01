@@ -26,15 +26,33 @@ In the case of classification, the following criteria are used to assess the qua
 class DecisionTreeCART:
 
     def __init__(self, max_depth=100, min_samples=2, ccp_alpha=0.0, regression=False):
-        self.max_depth = max_depth
-        self.min_samples = min_samples
+        # maximum depth of the tree (prevent overfitting).
+        self.max_depth = max_depth 
+        # minimum number of samples required to split a node (prevent overfitting)
+        self.min_samples = min_samples 
+        # cost complexity pruning alpha (regularization).
+        # A higher value means more aggressive pruning.
         self.ccp_alpha = ccp_alpha
+        # Boolean flag to indicate whether the tree is for regression (True) 
+        # or classification (False).
         self.regression = regression
+        # A placeholder to store the final tree structure 
+        # (likely a nested dictionary or a Node class), once built.
         self.tree = None
+        # store the type of the target y (e.g., str, int, or float), 
+        # which might be used for prediction formatting or logic branching.
         self._y_type = None
+        # total number of samples in the training data, 
+        # for pruning or normalization purposes.
         self._num_all_samples = None
 
     def _set_df_type(self, X, y, dtype):
+        """
+        A data preparation utility function inside custom decision tree class.
+        It makes sure that:
+        The feature matrix X is explicitly cast to a desired numerical type.
+        The target vector y is also cast, but only in case of regression.
+        """
         X = X.astype(dtype)
         y = y.astype(dtype) if self.regression else y
         self._y_dtype = y.dtype
@@ -49,18 +67,46 @@ class DecisionTreeCART:
 
     @staticmethod
     def _is_leaf_node(node):
-        return not isinstance(node, dict)   # if a node/tree is a leaf
+        """
+        It checks whether the input node is a leaf node, so it does not split further.
+        
+        The not isinstance(node, dict) part returns:
+        True if the node is a leaf (like a class label or regression value)
+        False if the node is a decision node 
+        (like {"feature": ..., "threshold": ..., "left": ..., "right": ...})
+        """
+        return not isinstance(node, dict)   # True if a node/tree is a leaf
 
     def _leaf_node(self, y):
+        """
+        for computing the value that a leaf node should return, and it behaves 
+        differently depending on whether its for regression or classification
+        """
         class_index = 0
 
         return np.mean(y) if self.regression else y.mode()[class_index]
 
     def _split_df(self, X, y, feature, threshold):
+        """
+        performing a binary split on the dataset based on 
+        a given feature and threshold.
+        Inputs:
+        X: Feature matrix (Pandas DataFrame)
+        y: Target vector
+        feature: The name or index of the feature to split on
+        threshold: The value at which to split that feature
+        """
         feature_values = X[feature]
         left_indexes = X[feature_values <= threshold].index
         right_indexes = X[feature_values > threshold].index
         sizes = np.array([left_indexes.size, right_indexes.size])
+        """
+        If either side has 0 samples (i.e. a bad or invalid split), 
+        then it doesnt split at all — instead, it returns a leaf node 
+        with the prediction for this branch by calling self._leaf_node(y).
+        Otherwise, it returns the two sets of indexes that define 
+        left and right splits.
+        """
 
         return self._leaf_node(y) if any(sizes == 0) else left_indexes, right_indexes
 
@@ -80,6 +126,9 @@ class DecisionTreeCART:
 
     @staticmethod
     def _cost_function(left_df, right_df, method):
+        """
+        Weighted average of binary split depending on method (Gini or MSE)
+        """
         total_df_size = left_df.size + right_df.size
         p_left_df = left_df.size / total_df_size
         p_right_df = right_df.size / total_df_size
@@ -90,6 +139,13 @@ class DecisionTreeCART:
         return J  # weighted Gini impurity or weighted mse (depends on a method)
 
     def _node_error_rate(self, y, method):
+        """
+        self._num_all_samples: stores the total number of training samples (y.size) 
+        at the root of the tree. It is used to compute the weighted error of any 
+        subtree or node relative to the entire dataset.
+        When calculating errors for cost-complexity pruning, 
+        errors must be normalized to account for sample sizes.
+        """
         if self._num_all_samples is None:
             self._num_all_samples = y.size   # num samples of all dataframe
         current_num_samples = y.size
@@ -434,3 +490,29 @@ for i, alpha in enumerate(clf_ccp_alphas):
     decision_boundary_plot(X1, y1, X1_train, y1_train, clf, feature_indexes, title, ax=ax)
 
 plt.show()
+
+"""
+scikit-learn implementation to select best alpha:
+
+In DecisionTreeClassifier or DecisionTreeRegressor, you'd do:
+
+path = clf.cost_complexity_pruning_path(X_train, y_train)
+ccp_alphas, impurities = path.ccp_alphas, path.impurities
+
+# Cross-validation scores for each alpha
+from sklearn.model_selection import cross_val_score
+
+cv_scores = []
+for alpha in ccp_alphas:
+    clf_pruned = DecisionTreeClassifier(ccp_alpha=alpha)
+    scores = cross_val_score(clf_pruned, X_train, y_train, cv=5)
+    cv_scores.append(scores.mean())
+
+# Pick alpha with best cv score
+best_alpha = ccp_alphas[np.argmax(cv_scores)]
+
+# Train final pruned tree
+final_tree = DecisionTreeClassifier(ccp_alpha=best_alpha)
+final_tree.fit(X_train, y_train)
+
+"""
