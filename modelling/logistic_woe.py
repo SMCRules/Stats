@@ -81,11 +81,15 @@ def logreg_test(cols, encoder):
     acc_scores = []
     
     skf = StratifiedKFold(n_splits=6, shuffle=True).split(df, train_target)
-    for train_id, valid_id in skf:
+    # train_id: indices for training set
+    # valid_id: indices for validation set
+    for train_id, valid_id in skf:        
         enc_tr = encoder.fit_transform(df.iloc[train_id,:], train_target.iloc[train_id])
+        # applies trained encoder to validation set
         enc_val = encoder.transform(df.iloc[valid_id,:])
         regressor = LogisticRegression(solver='lbfgs', max_iter=1000, C=0.6)
         regressor.fit(enc_tr, train_target.iloc[train_id])
+        # performance metrics evaluated on validation set
         acc_scores.append(regressor.score(enc_val, train_target.iloc[valid_id]))
         probabilities = [pair[1] for pair in regressor.predict_proba(enc_val)]
         auc_scores.append(roc_auc_score(train_target.iloc[valid_id], probabilities))
@@ -97,7 +101,7 @@ def logreg_test(cols, encoder):
     auc_scores = pd.Series(auc_scores)
     mean_auc = auc_scores.mean() * 100
     print("Mean AUC score: {:.3f}%".format(mean_auc))
-
+"""
 ##########################################
 print("Using Weight of Evidence Encoder")
 woe_encoder = ce.WOEEncoder(cols=columns)
@@ -112,6 +116,74 @@ logreg_test(columns, targ_encoder)
 print("\nUsing CatBoost Encoder")
 cb_encoder = ce.CatBoostEncoder(cols=columns)
 logreg_test(columns, cb_encoder)
+"""
+
+### Correlation with target
+# Target-encoded features generally show greater correlation with target 
+# than WOE-encoded ones. 
+# Binary classification problem, correlation shouldn't be trusted too much 
+# as a metric of feature importance.
+
+# Encode again, this time on the whole training set. WOEE was done above.
+encoded_features = woe_encoded_train
+
+encoder = ce.TargetEncoder(cols=columns, smoothing=0.2)
+encoded_target = encoder.fit_transform(train_features[columns], train_target).add_suffix('_targ_enc')
+encoded_features = encoded_features.join(encoded_target)
+
+encoder = ce.CatBoostEncoder(cols=columns)
+encoded_catboost = encoder.fit_transform(train_features[columns], train_target).add_suffix('_catboost')
+encoded_features = encoded_features.join(encoded_catboost)
+
+training_set = encoded_features.copy()
+training_set['target'] = train_target
+corrmat = training_set.corr()
+
+plt.subplots(figsize=(20,20))
+sns.heatmap(corrmat, vmax=0.9, square=True)
+
+corr_with_target = corrmat['target'].apply(abs).sort_values(ascending=False)
+corr_with_target.drop(['target'], inplace=True)
+df = pd.DataFrame(data={'features': corr_with_target.index, 'target': corr_with_target.values})
+plt.figure(figsize=(20, 20))
+sns.barplot(x="target", y="features", data=df)
+plt.title('Correlation with target')
+plt.tight_layout()
+plt.show()
+
+
+###Stratified WOE encoding for final output
+# Encoding training data
+df = train_features[columns]
+train_encoded = pd.DataFrame()
+skf = StratifiedKFold(n_splits=5,shuffle=True).split(df, train_target)
+for tr_in,fold_in in skf:
+    encoder = ce.WOEEncoder(cols=columns)
+    encoder.fit(df.iloc[tr_in,:], train_target.iloc[tr_in])
+    train_encoded = pd.concat(
+    [train_encoded, encoder.transform(df.iloc[fold_in, :])],
+    axis=0,
+    ignore_index=False
+)
+
+train_encoded = train_encoded.sort_index()
+
+# Encoding test data
+encoder = ce.WOEEncoder(cols=columns)
+encoder.fit(df, train_target)
+test_encoded = encoder.transform(test[columns])
+
+# Fitting
+regressor = LogisticRegression(solver='lbfgs', max_iter=1000, C=0.6)
+regressor.fit(train_encoded, train_target)
+
+# Predicting
+probabilities = [pair[1] for pair in regressor.predict_proba(test_encoded)]
+output = pd.DataFrame({'id': test['id'],
+                       'target': probabilities})
+# output.to_csv('submission.csv', index=False)
+print(output.head(5))
+print(output.describe())
 
 
 
