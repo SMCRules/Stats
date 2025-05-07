@@ -79,8 +79,8 @@ class DecisionTreeCART:
 
     def _leaf_node(self, y):
         """
-        for computing the value that a leaf node should return, and it behaves 
-        differently depending on whether its for regression or classification
+        computes the value that a leaf node should return. Behaves 
+        differently depending on whether for regression or classification
         """
         class_index = 0
 
