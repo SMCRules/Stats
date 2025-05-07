@@ -80,15 +80,15 @@ def logreg_test(cols, encoder):
     auc_scores = []
     acc_scores = []
     
-    skf = StratifiedKFold(n_splits=6, shuffle=True).split(df, train_targets)
+    skf = StratifiedKFold(n_splits=6, shuffle=True).split(df, train_target)
     for train_id, valid_id in skf:
-        enc_tr = encoder.fit_transform(df.iloc[train_id,:], train_targets.iloc[train_id])
+        enc_tr = encoder.fit_transform(df.iloc[train_id,:], train_target.iloc[train_id])
         enc_val = encoder.transform(df.iloc[valid_id,:])
         regressor = LogisticRegression(solver='lbfgs', max_iter=1000, C=0.6)
-        regressor.fit(enc_tr, train_targets.iloc[train_id])
-        acc_scores.append(regressor.score(enc_val, train_targets.iloc[valid_id]))
+        regressor.fit(enc_tr, train_target.iloc[train_id])
+        acc_scores.append(regressor.score(enc_val, train_target.iloc[valid_id]))
         probabilities = [pair[1] for pair in regressor.predict_proba(enc_val)]
-        auc_scores.append(roc_auc_score(train_targets.iloc[valid_id], probabilities))
+        auc_scores.append(roc_auc_score(train_target.iloc[valid_id], probabilities))
         
     acc_scores = pd.Series(acc_scores)
     mean_acc = acc_scores.mean() * 100
