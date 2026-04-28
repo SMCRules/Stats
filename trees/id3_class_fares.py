@@ -407,8 +407,6 @@ def scale(X):
 
     return X
 
-X = scale(X)
-
 def train_test_split(X, y, random_state=41, test_size=0.2):
     """
     Splits the data into training and testing sets.
@@ -509,6 +507,7 @@ def balanced_accuracy(y_true, y_pred):
 
     return balanced_acc
 
+X = scale(X)
 X_train, X_test, y_train, y_test = train_test_split(X, y, random_state=41, test_size=0.2)
 
 #create model instance
