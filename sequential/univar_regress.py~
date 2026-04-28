@@ -1,0 +1,119 @@
+
+"""
+The aim is to code a sequential learning system that learns during the action: 
+predicts
+learns
+improves
+model stays relevant
+retraining becomes optional
+adaptation becomes automatic
+Continuously and i want to make a comparison with batch inference.
+Also this is useful to practice in Python: functions, classes, iterators like next().
+"""
+
+
+
+# batch learning
+class Batch:
+    def train_model(data):
+        model = fit(data)
+        return model
+
+class Sequential: 
+    def __init__(self):
+        self.weight = 0.0
+
+    def predict(self, x):
+        return self.weight * x
+
+    def update(self, x, y, lr=0.01):
+        prediction = self.predict(x)
+        error = y - prediction
+        self.weight += lr * error * x
+
+# forget old knowledge
+def update_with_decay(model, x, y, lr=0.01, decay=0.99):
+    model.weight *= decay  # forget old knowledge
+    
+    prediction = model.predict(x)
+    error = y - prediction
+    
+    model.weight += lr * error * x
+
+def update_window(x, y):
+    window.append((x, y))    
+    return sum(y for _, y in window) / len(window)
+
+def live_prediction(model, x):
+    prediction = model.predict(x)    
+    # simulate true value
+    y = 2 * x    
+    model.update(x, y)    
+    return prediction
+
+def route_and_update(segment, x, y):
+    model = models[segment]
+    model.update(x, y)
+
+def track_error(pred, actual):
+    errors.append(abs(pred - actual))
+    
+    return sum(errors) / len(errors)
+
+# full sequential learning loop
+def online_learning_system(model, stream):
+    for x in stream:
+        pred = model.predict(x)
+        
+        y = 2 * x  # simulated truth
+        
+        model.update(x, y)
+        
+        error = abs(pred - y)
+        
+        print({
+            "input": x,
+            "prediction": pred,
+            "error": error,
+            "weight": model.weight
+        })
+
+
+import random
+from collections import deque
+
+# generate data in one go.
+Nobs = 100
+# inputs
+x = random.uniform(0, Nobs)
+# observations
+y = 2 * x  + randon.normal(loc=0, scale=1, Nobs)
+# append x and y to have training data
+training_data = [x, y]
+
+# for batch inference we fit 0:obs to have inference at the end of obs
+# for sequential inference we fit sequentially one data point at a time
+
+# window based learning
+window = deque(maxlen=5)
+
+# scaling with multiple models
+models = {
+    "segment_a": OnlineModel(),
+    "segment_b": OnlineModel()
+}
+
+# evaluate in real-time 
+errors = []
+
+
+# call classes
+batch = Batch()
+sequential = Sequential()
+
+# call models
+model_batch = batch.train_model(training_data)
+
+
+# Real-Time Predictions for sequential model
+print(live_prediction(model, 5))
