@@ -133,7 +133,7 @@ class NeuralNetwork:
             
         return mini_batches
 
-    def fit(self, X, Y, epochs=1000, batch_size=64, print_cost=True):
+    def fit_mini_batches(self, X, Y, epochs=1000, batch_size=64, print_cost=True):
         X = X.T
         Y = Y.reshape(1, -1)
 
@@ -154,14 +154,21 @@ class NeuralNetwork:
                 cost = self.compute_cost(AL_full, Y)
                 print(f"Cost at epoch {i}: {cost:.4f}")
 
-        # for i in range(epochs):
-        #     AL, caches = self.forward_propagation(X)
-        #     cost = self.compute_cost(AL, Y)
-        #     self.backward_propagation(AL, Y, caches)
-        #     self.update_parameters()
+    def fit(self, X, Y, epochs=5000, print_cost=True):
+        X = X.T
+        Y = Y.reshape(1, -1)
 
-        #     if print_cost and i % 1000 == 0:
-        #         print(f"Cost at iteration {i}: {cost:.4f}")
+        self.initialize_parameters()
+
+        for i in range(epochs):
+            AL, caches = self.forward_propagation(X)
+            cost = self.compute_cost(AL, Y)
+            self.backward_propagation(AL, Y, caches)
+            self.update_parameters()
+
+            if print_cost and i % 1000 == 0:
+                print(f"Cost at iteration {i}: {cost:.4f}")
+
     
 # =========================
 # Example usage
@@ -185,14 +192,15 @@ if __name__ == "__main__":
     X_test = scaler.transform(X_test)
 
     layers = [2, 16, 16, 1]
-    model = NeuralNetwork(layer_dimensions=layers, learning_rate=0.01)
-    model.fit(X, y, epochs=5000, batch_size=64)
+    model_batches = NeuralNetwork(layer_dimensions=layers, learning_rate=0.01)
+    model_batches.fit_mini_batches(X, y, epochs=5000, batch_size=64)
+    acc = model_batches.accuracy(X_test, y_test)
+    print(f"\nTest Accuracy: {acc:.4f}")
     
     # Model
-    # layers = [X.shape[1], 32, 16, 1]
-    # model = NeuralNetwork(layer_dimensions=layers, learning_rate=0.01)
-    # model.fit(X_train, y_train, epochs=10000)
-
+    layers = [X.shape[1], 32, 16, 1]
+    model = NeuralNetwork(layer_dimensions=layers, learning_rate=0.01)
+    model.fit(X_train, y_train, epochs=10000)
     acc = model.accuracy(X_test, y_test)
     print(f"\nTest Accuracy: {acc:.4f}")
 
@@ -219,5 +227,7 @@ if __name__ == "__main__":
         plt.show()
 
     # Plot boundary
+    plot_decision_boundary(model_batches, X, y)
     plot_decision_boundary(model, X, y)
+
 
