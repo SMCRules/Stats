@@ -1,3 +1,10 @@
+"""
+Consider a FNN with one hidden layer containing two neurons for 
+the make_moons dataset using off-the-shelf MLPClassifier from scikit-learn.
+
+It is encouraged to try different hidden layer sizes and activation functions.
+"""
+
 import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.datasets import make_moons
@@ -21,7 +28,7 @@ plt.show()
 # Split the data into training and testing sets (70% train, 30% test)
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
 
-# Standardize the features (important in machine learning)
+# Standardize the features on the training and apply to the test set
 scaler = StandardScaler()
 X_train = scaler.fit_transform(X_train)
 X_test = scaler.transform(X_test)
@@ -37,10 +44,12 @@ hidden_layer_width = 2  # Number of neurons per hidden layer
 # Create a tuple representing the hidden layer sizes
 hidden_layer_sizes = (hidden_layer_width,) * hidden_layer_depth
 
-# Train a neural network on the training dataset
+# Train a neural network on the training dataset.
+# mlp stands for multi-layer perceptron
 mlp = MLPClassifier(
     hidden_layer_sizes=hidden_layer_sizes,
-    activation='relu',  # activation function for hidden layers, can be 'relu',  # activation function for output layer, can be 'relu' or 'sigmoid',  # activation function for hidden layers
+    activation='relu',  
+    # activation function for hidden layers, can be 'relu' or 'sigmoid'
     solver='sgd',  # optimization algorithm
     max_iter=2000,
     learning_rate_init=0.01,
@@ -94,7 +103,8 @@ plt.tight_layout()
 plt.show()
 
 # The decision boundary is not complex enough to separate the data
-# hint: what if we increase the number of hidden layers to 3 and the number of neurons to 4 above?
+# hint: what if we increase the number of hidden layers to 3 and the number of 
+# neurons to 4 above and rerun the code?
 # hidden_layer_depth = 3  # Number of hidden layers
 # hidden_layer_width = 4  # Number of neurons per hidden layer
 
