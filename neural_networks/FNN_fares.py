@@ -8,6 +8,7 @@ import plotly.express as px
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import accuracy_score
+
 ### helper functions ###
 def relu(Z):
     """
@@ -397,24 +398,28 @@ def data_load(file_path):
     
     return X, y, X_cols
 
-def scale(X):
+def scale(X_train, X_test):
     """
-    Standardizes the data in the array X.
+    Standardizes training and test data using training statistics.
 
     Parameters:
-        X (numpy.ndarray): Features array of shape (n_samples, n_features).
+        X_train (np.ndarray)
+        X_test (np.ndarray)
 
     Returns:
-        numpy.ndarray: The standardized features array.
+        X_train_scaled, X_test_scaled
     """
     # Calculate the mean and standard deviation of each feature
-    mean = np.mean(X, axis=0)
-    std = np.std(X, axis=0)
+    mean = np.mean(X_train, axis=0)
+    std = np.std(X_train, axis=0)
+
+    std[std == 0] = 1
 
     # Standardize the data
-    X = (X - mean) / std
+    X_train = (X_train - mean) / std
+    X_test = (X_test - mean) / std
 
-    return X
+    return X_train, X_test
 
 def train_test_split(X, y, random_state=41, test_size=0.2):
     """
@@ -451,14 +456,6 @@ def train_test_split(X, y, random_state=41, test_size=0.2):
 
     return X_train, X_test, y_train, y_test   
 
-
-
-X, y, X_cols = data_load('/home/miguel/Python_Projects/datasets/breast-cancer.xls')
-print(X.shape, y.shape)
-
-X = scale(X)
-X_train, X_test, y_train, y_test = train_test_split(X, y, random_state=42, test_size=0.2)
-
 def train_evaluate_model(X_train, y_train, X_test, y_test, learning_rate, layer_dimensions, epochs):
     '''
     Keyword arguments:
@@ -480,6 +477,35 @@ def train_evaluate_model(X_train, y_train, X_test, y_test, learning_rate, layer_
     #create a dataframe to visualize the results
     eval_df = pd.DataFrame([[learning_rate, layer_dimensions, epochs, accuracy]], columns=['Learning_Rate', 'Layers', 'Epochs', 'Accuracy'])
     return eval_df
+
+## plot sigmoid vs relu activation functions
+z = np.linspace(-12, 12, 200)
+fig = px.line(x=z, y=relu(z)[0],title='ReLU Function',template="plotly_dark")
+fig.update_layout(
+    title_font_color="#00F1FF", 
+    xaxis=dict(color="#00F1FF"), 
+    yaxis=dict(color="#00F1FF") 
+)
+fig.show()
+fig = px.line(x=z, y=sigmoid(z)[0],title='Sigmoid Function',template="plotly_dark")
+fig.update_layout(
+    title_font_color="#00F1FF", 
+    xaxis=dict(color="#00F1FF"), 
+    yaxis=dict(color="#00F1FF") 
+)
+fig.show()
+
+
+X, y, X_cols = data_load('/home/miguel/Python_Projects/datasets/breast-cancer.xls')
+print(X.shape, y.shape)
+
+#1. Split the data into training and testing sets
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, random_state=42, test_size=0.3
+    )
+
+#2. Compute mean/std only on training data
+X_train, X_test = scale(X_train, X_test)
 
 learning_rate = 0.001
 layers = [25,1,1]
