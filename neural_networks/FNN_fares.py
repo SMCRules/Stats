@@ -42,6 +42,11 @@ class NeuralNetwork:
 
             self.parameters[f'b{l}'] = np.ones((self.layer_dimensions[l], 1)) * 0.01
 
+        # 🔍 DEBUG HERE
+        # print("\nInitialized parameter shapes:")
+        # for l in range(1, self.n_layers):
+        #     print(f"W{l} shape:", self.parameters[f'W{l}'].shape)
+
     def forward_propagation(self, X):        
         caches = []
         A = X
@@ -67,6 +72,33 @@ class NeuralNetwork:
         caches.append((A_prev, W, b, activation_cache))
 
         return AL, caches
+    
+    def forward_with_activations(self, X):
+        """
+        Returns activations of each layer for visualization
+        Accepts X in shape (samples, features)
+        """
+        X = X.T
+        A = X
+
+        activations = [A]  # include input layer
+        L = self.n_layers - 1
+
+        for l in range(1, L):
+            W = self.parameters[f'W{l}']
+            b = self.parameters[f'b{l}']
+            Z = np.dot(W, A) + b
+            A, _ = relu(Z)
+            activations.append(A)
+
+        # Output layer
+        W = self.parameters[f'W{L}']
+        b = self.parameters[f'b{L}']
+        Z = np.dot(W, A) + b
+        A, _ = sigmoid(Z)
+        activations.append(A)
+
+        return activations
 
     def compute_cost(self, AL, Y):
         m = Y.shape[1]
@@ -99,6 +131,11 @@ class NeuralNetwork:
             self.grads[f'db{l}'] = (1/m) * np.sum(dZ, axis=1, keepdims=True)
             dA_prev = np.dot(W.T, dZ)
 
+        # 🔍 DEBUG HERE
+        # print("\nGradient shapes:")
+        # for l in range(1, self.n_layers):
+        #     print(f"dW{l} shape:", self.grads[f'dW{l}'].shape)
+
     def update_parameters(self):
         for l in range(1, self.n_layers):
             # 🔍 Sanity check
@@ -117,7 +154,7 @@ class NeuralNetwork:
         preds = self.predict(X)
         return np.mean(preds == y)
 
-    def create_mini_batches(self,X, Y, batch_size):
+    def create_mini_batches(self,X, Y, batch_size=64):
         m = X.shape[1]
         permutation = np.random.permutation(m)
         
@@ -174,6 +211,7 @@ class NeuralNetwork:
 # Example usage
 # =========================
 if __name__ == "__main__":
+    import matplotlib.pyplot as plt
     # from sklearn.datasets import load_breast_cancer
     # data = load_breast_cancer()
     # X, y = data.data, data.target
@@ -229,5 +267,32 @@ if __name__ == "__main__":
     # Plot boundary
     plot_decision_boundary(model_batches, X, y)
     plot_decision_boundary(model, X, y)
+
+    def plot_layer_activations(model, X, y):
+        activations = model.forward_with_activations(X)
+
+        n_layers = len(activations)
+        plt.figure(figsize=(15, 4))
+
+        for i, A in enumerate(activations):
+            plt.subplot(1, n_layers, i + 1)
+
+            if A.shape[0] >= 2:
+                plt.scatter(A[0, :], A[1, :], c=y, cmap='coolwarm', edgecolors='k')
+                plt.title(f"Layer {i}")
+            else:
+                # 1D case
+                plt.scatter(A[0, :], np.zeros_like(A[0, :]), c=y, cmap='coolwarm', edgecolors='k')
+                plt.title(f"Layer {i} (1D)")
+
+        plt.tight_layout()
+        plt.show()
+
+    model = NeuralNetwork(layer_dimensions=[2, 8, 8, 1], learning_rate=0.01)
+    model.fit(X, y, epochs=5000, print_cost=False)
+    plot_layer_activations(model, X, y) 
+
+    for i, A in enumerate(model.forward_with_activations(X)):
+        print(f"Layer {i} shape:", A.shape)
 
 
