@@ -61,6 +61,14 @@ def information_gain(outcome, feature):
 
     return np.round(H_outcome - weighted_entropy, 4)
 
+def best_feature(X, y):
+    gains = {}
+    for col in X.columns:
+        gains[col] = information_gain(y, X[col])
+        # print(col, gains[col])
+    
+    return max(gains, key=gains.get)
+
 def info_gain(parent, left, right):
     # H(parent) = entropy outcome
     H_parent = entropy(parent)
@@ -81,11 +89,10 @@ data = pd.DataFrame({
     'X3': x3,
     'Y': y
 })
-
+X = data.drop('Y', axis=1)
 for i in range(data.shape[1]):
     print(f'Entropy of {data.columns[i]} = {entropy(data[data.columns[i]])}')
     print(f'IG for {data.columns[i]} = {information_gain(data.Y, data[data.columns[i]])}')
-
-
+    print(f'Best feature for {data.columns[i]} = {best_feature(X, data.Y)}')
 
 
