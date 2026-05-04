@@ -62,6 +62,10 @@ def information_gain(outcome, feature):
     return np.round(H_outcome - weighted_entropy, 4)
 
 def best_feature(X, y):
+    """
+    Chooses the feature with highest IG
+    So, this becomes the internal node
+    """
     gains = {}
     for col in X.columns:
         gains[col] = information_gain(y, X[col])
