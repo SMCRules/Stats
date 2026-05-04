@@ -73,14 +73,38 @@ def best_feature(X, y):
     
     return max(gains, key=gains.get)
 
-def info_gain(parent, left, right):
-    # H(parent) = entropy outcome
-    H_parent = entropy(parent)
-    # 
-    H_left = entropy(left)
-    H_right = entropy(right)
-    return H_parent - (len(left)/len(parent)*H_left + len(right)/len(parent)*H_right)
-    return entropy(parent) - (len(left)/len(parent)*entropy(left) + len(right)/len(parent)*entropy(right))
+def id3(X, y):
+    # Stopping condition 1: pure node
+    if len(y.unique()) == 1:
+        return y.iloc[0]
+    
+    # Stopping condition 2: no features left
+    if X.shape[1] == 0:
+        return y.mode()[0]
+
+    # Select best feature
+    best = best_feature(X, y)
+    tree = {best: {}}
+
+    # Split dataset by feature values
+    for value in X[best].unique():
+        X_subset = X[X[best] == value].drop(columns=[best])
+        y_subset = y[X[best] == value]
+
+        subtree = id3(X_subset, y_subset)
+        tree[best][value] = subtree
+
+    return tree
+
+def predict(tree, sample):
+    if not isinstance(tree, dict):
+        return tree
+
+    root = next(iter(tree))
+    value = sample[root]
+    subtree = tree[root][value]
+
+    return predict(subtree, sample)
 
 # create a dataset
 x1 = [1, 1, 1, 1, 1, 0, 0, 0, 0, 0]
@@ -93,10 +117,22 @@ data = pd.DataFrame({
     'X3': x3,
     'Y': y
 })
+
 X = data.drop('Y', axis=1)
+y = data.Y
 for i in range(data.shape[1]):
     print(f'Entropy of {data.columns[i]} = {entropy(data[data.columns[i]])}')
     print(f'IG for {data.columns[i]} = {information_gain(data.Y, data[data.columns[i]])}')
     print(f'Best feature for {data.columns[i]} = {best_feature(X, data.Y)}')
 
+tree = id3(X, y)
+print(tree)
 
+data_path = '/home/miguel/Python_Projects/datasets/'
+data = pd.read_csv(data_path + 'PlayTennis.csv')
+print(data.head())
+X = data.drop('play', axis=1)
+y = data['play']
+
+tree = id3(X, y)
+print(tree)
