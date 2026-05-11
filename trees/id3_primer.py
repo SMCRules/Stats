@@ -45,6 +45,7 @@ def entropy(input):
 
 def information_gain(outcome, feature):
     """
+    Computes the IG for a given feature.
     Information Gain: how much uncertainty about outcome is reduced 
     after a split by feature. 
     We are dealing with categorical features that naturally split outcome
@@ -72,17 +73,21 @@ def information_gain(outcome, feature):
 
 def best_feature(X, y):
     """
-    Chooses the feature with highest IG
-    So, this becomes the internal node
+    Loop through all the features, compute IG for each and 
+    form a gains dictionary with feature name as key and IG as value. 
+    max(iterable, key=function): Apply function to every element and 
+    maximize according to the returned values. gains.get('x1') → 1.0     
     """
     gains = {}
     for col in X.columns:
         gains[col] = information_gain(y, X[col])
         # print(col, gains[col])
     
+    # the returned value is the key (feature) 
+    # associated with the highest IG
     return max(gains, key=gains.get)
 
-def id3(X, y):
+def id3_tree(X, y):
     # Stopping condition 1: pure node
     if len(y.unique()) == 1:
         return y.iloc[0]
@@ -116,7 +121,7 @@ def predict(tree, sample):
     return predict(subtree, sample)
 
 # create a dataset
-x1 = [1, 1, 1, 1, 1, 0, 0, 0, 0, 0]
+x1 = [1, 1, 1, 1, 0, 0, 0, 0, 0, 1]
 x2 = [1, 1, 1, 0, 0, 0, 0, 0, 1, 1]
 x3 = [0, 1, 0, 1, 0, 1, 0, 1, 0, 1]
 y = [1, 1, 1, 1, 1, 0, 0, 0, 0, 0]
@@ -137,7 +142,7 @@ for i in range(data.shape[1]):
     print(f'IG for {data.columns[i]} = {information_gain(data.Y, data[data.columns[i]])}')
     print(f'Best feature for {data.columns[i]} = {best_feature(X, data.Y)}')
 
-tree = id3(X, y)
+tree = id3_tree(X, y)
 print(tree)
 
 """
@@ -147,6 +152,21 @@ print(data.head())
 X = data.drop('play', axis=1)
 y = data['play']
 
-tree = id3(X, y)
+tree = id3_tree(X, y)
 print(tree)
+"""
+"""
+# important pattern in ML
+gains = {
+    'x1': 1.0,
+    'x2': 0.029,
+    'x3': 0.029
+}
+max(
+    ['x1', 'x2', 'x3'],
+    key=lambda k: gains[k]
+)
+best_model = max(models, key=models.get)
+best_split = max(candidate_splits, key=lambda s: s['gain'])
+When iterating over a dictionary, Python iterates over the keys, not the values.
 """
