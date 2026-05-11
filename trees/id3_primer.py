@@ -1,4 +1,8 @@
 """
+A decision tree is loop + recursion:
+    a best feature
+    plus a decision tree for each branch: subtree = id3_tree(X_subset, y_subset)
+
 Code from scratch a id3 decision tree for simple binary classification. 
 All the variables are discrete => this simplifies the code
 We are using functions instead of classes.
@@ -17,7 +21,7 @@ import math
 
 def entropy(input):
     probs = input.value_counts(normalize=True)
-    print("probs", probs)
+    # print("probs", probs)
     return -sum(probs*np.log2(probs))
 
 # def information_gain(outcome, feature):
@@ -88,22 +92,31 @@ def best_feature(X, y):
     return max(gains, key=gains.get)
 
 def id3_tree(X, y):
-    # Stopping condition 1: pure node
+    # Do all remaining observations belong to the same class?
+    # Stopping condition 1: return a leaf node: final prediction
+    # once all labels (target) are identical no more IG is possible
     if len(y.unique()) == 1:
         return y.iloc[0]
     
+    # no more attributes available to separate classes, so predict the majority class
     # Stopping condition 2: no features left
     if X.shape[1] == 0:
         return y.mode()[0]
 
     # Select best feature
     best = best_feature(X, y)
+    # root node of the tree with the best feature selected with IG
     tree = {best: {}}
 
     # Split dataset by feature values
+    # For the current best feature => create one branch for each value of that feature
     for value in X[best].unique():
+        print("best, value\n", best, value)
+        # After recursive splitting, features get removed .drop(columns=[best])
         X_subset = X[X[best] == value].drop(columns=[best])
+        print("X_subset\n", X_subset)
         y_subset = y[X[best] == value]
+        print("y_subset\n", y_subset)
 
         subtree = id3_tree(X_subset, y_subset)
         tree[best][value] = subtree
@@ -121,6 +134,7 @@ def predict(tree, sample):
     return predict(subtree, sample)
 
 # create a dataset
+# x1 = [1, 1, 1, 1, 1, 0, 0, 0, 0, 0]
 x1 = [1, 1, 1, 1, 0, 0, 0, 0, 0, 1]
 x2 = [1, 1, 1, 0, 0, 0, 0, 0, 1, 1]
 x3 = [0, 1, 0, 1, 0, 1, 0, 1, 0, 1]
@@ -137,11 +151,12 @@ data = pd.DataFrame({
 
 X = data.drop('Y', axis=1)
 y = data.Y
-for i in range(data.shape[1]):
-    print(f'Entropy of {data.columns[i]} = {entropy(data[data.columns[i]])}')
-    print(f'IG for {data.columns[i]} = {information_gain(data.Y, data[data.columns[i]])}')
-    print(f'Best feature for {data.columns[i]} = {best_feature(X, data.Y)}')
+# for i in range(data.shape[1]):
+#     print(f'Entropy of {data.columns[i]} = {entropy(data[data.columns[i]])}')
+#     print(f'IG for {data.columns[i]} = {information_gain(data.Y, data[data.columns[i]])}')
+#     print(f'Best feature for {data.columns[i]} = {best_feature(X, data.Y)}')
 
+print("all data\n", data)
 tree = id3_tree(X, y)
 print(tree)
 
