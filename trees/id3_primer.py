@@ -105,7 +105,7 @@ def id3_tree(X, y):
         X_subset = X[X[best] == value].drop(columns=[best])
         y_subset = y[X[best] == value]
 
-        subtree = id3(X_subset, y_subset)
+        subtree = id3_tree(X_subset, y_subset)
         tree[best][value] = subtree
 
     return tree
