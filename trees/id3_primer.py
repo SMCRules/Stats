@@ -1,21 +1,28 @@
 """
-Code from scratch a id3 decision tree for simple binary classification
-dataset. All the variables are discrete.  
-The idea is to use entropy and information gain to build the tree
-along with Python functions, conditions and recursions to implement
-the algorithm
+Code from scratch a id3 decision tree for simple binary classification. 
+All the variables are discrete => this simplifies the code
+We are using functions instead of classes.
+
+Code structure:
+1. Entropy 
+2. Information Gain
+3. Best Feature Selection
+3. ID3 Algorithm for building tree
+4. Prediction
+5. Plotting the tree
 """
 import pandas as pd
 import numpy as np
 import math
 
-def entropy(var):
-    probs = var.value_counts(normalize=True)
+def entropy(input):
+    probs = input.value_counts(normalize=True)
+    print("probs", probs)
     return -sum(probs*np.log2(probs))
 
 # def information_gain(outcome, feature):
 #     """
-#     Your implementation assumes binary features (0 and 1):
+#     This implementation assumes binary features (0 and 1):
 #     But it will break or give wrong results if:
 #     feature has more than 2 categories
 #     feature is not encoded as 0/1
@@ -38,10 +45,9 @@ def entropy(var):
 
 def information_gain(outcome, feature):
     """
-    General Information Gain calculation for:
-    binary features
-    multi-class categorical features
-    But:
+    Information Gain: how much uncertainty about outcome is reduced 
+    after a split by feature. 
+    We are dealing with categorical features that naturally split outcome
     For continuous features, we will need thresholds (like in CART)
     """
     H_outcome = entropy(outcome)
@@ -50,10 +56,13 @@ def information_gain(outcome, feature):
     # for value in feature.unique():
     #     subset = outcome[feature == value]        
     #     weight = len(subset) / N
-    #     weighted_entropy += weight * entropy(subset)
+    #     weighted_entropy += weight * entropy(subset)    
     
-    # pandas style avoiding looping
+    # outcome.groupby(feature) = groups the target by feature values
+    # apply(lambda x: (len(x)/N) * entropy(x)) = apply function to each group
+    # of features for each subset x
     weighted_entropy = (
+        # pandas style avoiding looping
         outcome.groupby(feature)
         .apply(lambda x: (len(x)/N) * entropy(x))
         .sum()
@@ -118,6 +127,9 @@ data = pd.DataFrame({
     'Y': y
 })
 
+# This is also a neat way to create a dataframe
+# data = pd.DataFrame(list(zip(x1, x2, x3, y)), columns=['x1', 'x2', 'x3', 'y'])
+
 X = data.drop('Y', axis=1)
 y = data.Y
 for i in range(data.shape[1]):
@@ -128,6 +140,7 @@ for i in range(data.shape[1]):
 tree = id3(X, y)
 print(tree)
 
+"""
 data_path = '/home/miguel/Python_Projects/datasets/'
 data = pd.read_csv(data_path + 'PlayTennis.csv')
 print(data.head())
@@ -136,3 +149,4 @@ y = data['play']
 
 tree = id3(X, y)
 print(tree)
+"""
