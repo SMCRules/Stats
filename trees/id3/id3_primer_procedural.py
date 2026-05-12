@@ -50,7 +50,7 @@ def entropy(y):
     
 #     return np.round(ig, 4)
 
-def information_gain(outcome, feature):
+def information_gain(y, xi):
     """
     Computes the IG for a given feature.
     Information Gain: how much uncertainty about outcome is reduced 
@@ -58,8 +58,8 @@ def information_gain(outcome, feature):
     We are dealing with categorical features that naturally split outcome
     For continuous features, we will need thresholds (like in CART)
     """
-    H_outcome = entropy(outcome)
-    N = len(outcome)
+    H_outcome = entropy(y)
+    N = len(y)
     # weighted_entropy = 0
     # for value in feature.unique():
     #     subset = outcome[feature == value]        
@@ -71,7 +71,7 @@ def information_gain(outcome, feature):
     # of features for each subset x
     weighted_entropy = (
         # pandas style avoiding looping
-        outcome.groupby(feature)
+        y.groupby(xi)
         .apply(lambda x: (len(x)/N) * entropy(x))
         .sum()
     )            
