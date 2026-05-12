@@ -124,13 +124,25 @@ def id3_tree(X, y):
     return tree
 
 def predict(tree, sample):
+    """
+    The prediction function mirrors the recursive structure of the ID3 tree,
+    walking down the tree following sample feature values until reaching a leaf.
+    """
+    # Stopping condition
+    # Tests whether we have reached a leaf node 'not dictionary' 
+    # instead of another subtree 'dictionary'
+    # isinstance(object, type): checks whether an object belongs to a given class/type
+    # isinstance('yes', dict) → False returns a prediction
     if not isinstance(tree, dict):
         return tree
-
-    root = next(iter(tree))
+    # iter(tree) = creates an iterator over the dictionary keys. 
+    # next() extracts the next element from an iterator.
+    root = next(iter(tree))    
     value = sample[root]
+    # Traverse the tree
     subtree = tree[root][value]
 
+    # Recursive prediction: calls prediction again on the smaller subtree.
     return predict(subtree, sample)
 
 # create a dataset
