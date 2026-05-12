@@ -20,6 +20,9 @@ import numpy as np
 import math
 
 def entropy(y):
+    """
+    computes entropy on target labels
+    """
     probs = y.value_counts(normalize=True)
     # print("probs", probs)
     return -sum(probs*np.log2(probs))

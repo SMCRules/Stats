@@ -14,15 +14,44 @@ import pandas as pd
 import numpy as np
 import math
 
+class Node:
+    def __init__(self, feature=None, prediction=None):
+        self.feature = feature
+        self.prediction = prediction
+        self.children = {}
+
+    def is_leaf(self):
+        return self.prediction is not None
+
 class ID3Classifier:
+    def __init__(self):
+        self.tree_ = None
+        self.feature_names_ = None
+        self.default_class_ = None
 
-    def entropy(self, input):
-        probs = input.value_counts(normalize=True)
+    def entropy(self, y):
+        """
+        computes entropy on target labels
+        """
+        probs = y.value_counts(normalize=True)
         return -sum(probs*np.log2(probs))
-        ...
 
-    def information_gain(self, X, y, feature):
-        ...
+    def information_gain(self, xi, y):
+        """
+        Computes the IG for a given feature xi.        
+        """
+        H_outcome = entropy(y)
+        N = len(y)
+        
+        weighted_entropy = (
+            # pandas style avoiding looping
+            y.groupby(xi)
+            .apply(lambda x: (len(x)/N) * entropy(x))
+            .sum()
+        )
+        return np.round(H_outcome - weighted_entropy, 4)
+
+        
 
     def best_split(self, X, y, features):
         ...
