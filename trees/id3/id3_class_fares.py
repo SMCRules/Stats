@@ -10,7 +10,7 @@ import pprint
 from sklearn.preprocessing import LabelEncoder
 
 """
-More advanced than id3_class_marya.py. 
+More advanced than id3_primer.py and id3_class_marya.py. 
 Functionality include classes. 
 Attributes are continuous but discretized with thresholds
 """
