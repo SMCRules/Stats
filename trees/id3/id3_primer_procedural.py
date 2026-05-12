@@ -19,8 +19,8 @@ import pandas as pd
 import numpy as np
 import math
 
-def entropy(input):
-    probs = input.value_counts(normalize=True)
+def entropy(y):
+    probs = y.value_counts(normalize=True)
     # print("probs", probs)
     return -sum(probs*np.log2(probs))
 
