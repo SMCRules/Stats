@@ -145,43 +145,56 @@ def predict(tree, sample):
     # Recursive prediction: calls prediction again on the smaller subtree.
     return predict(subtree, sample)
 
-# create a dataset
-# x1 = [1, 1, 1, 1, 1, 0, 0, 0, 0, 0]
-x1 = [1, 1, 1, 1, 0, 0, 0, 0, 0, 1]
-x2 = [1, 1, 1, 0, 0, 0, 0, 0, 1, 1]
-x3 = [0, 1, 0, 1, 0, 1, 0, 1, 0, 1]
-y = [1, 1, 1, 1, 1, 0, 0, 0, 0, 0]
-data = pd.DataFrame({
-    'X1': x1,
-    'X2': x2,
-    'X3': x3,
-    'Y': y
-})
+def data_load(file_path=None, synthetic=False):
+    # Synthetic data
+    if synthetic:
+        x1 = [1, 1, 1, 1, 0, 0, 0, 0, 0, 1]
+        x2 = [1, 1, 1, 0, 0, 0, 0, 0, 1, 1]
+        x3 = [0, 1, 0, 1, 0, 1, 0, 1, 0, 1]
+        y =  [1, 1, 1, 1, 1, 0, 0, 0, 0, 0]
 
-# This is also a neat way to create a dataframe
-# data = pd.DataFrame(list(zip(x1, x2, x3, y)), columns=['x1', 'x2', 'x3', 'y'])
+        df = pd.DataFrame({
+            'X1': x1,
+            'X2': x2,
+            'X3': x3,
+            'Y': y
+        })
 
-X = data.drop('Y', axis=1)
-y = data.Y
-# for i in range(data.shape[1]):
-#     print(f'Entropy of {data.columns[i]} = {entropy(data[data.columns[i]])}')
-#     print(f'IG for {data.columns[i]} = {information_gain(data.Y, data[data.columns[i]])}')
-#     print(f'Best feature for {data.columns[i]} = {best_feature(X, data.Y)}')
+        target = 'Y'
+    
+    else:
+        # Identify the dataset based on the file name
+        file_name = file_path.split('/')[-1]
+        df = pd.read_csv(file_path)
+        
+        if 'exam' in file_name:
+            target = 'Working'
+                        
+        elif 'tennis' in file_name:
+            target = 'PlayTennis'
+                    
+        else:
+            raise ValueError("Unsupported dataset. Please provide a valid file path.")
 
+    X = df.drop(columns=[target])
+    y = df[target]
+    X_cols = X.columns   
+    
+    return X, y, X_cols
+
+### Implementation pick either option
+#X, y, X_cols = data_load('/home/miguel/Python_Projects/datasets/id3_tennis.csv')
+#X, y, X_cols = data_load('/home/miguel/Python_Projects/datasets/id3_exam.csv')
+X, y, X_cols = data_load(synthetic=True)
+
+data = X.copy()
+data['y'] = y
+print(X.shape, y.shape)
 print("all data\n", data)
-tree = id3_tree(X, y)
-print(tree)
-
-"""
-data_path = '/home/miguel/Python_Projects/datasets/'
-data = pd.read_csv(data_path + 'PlayTennis.csv')
-print(data.head())
-X = data.drop('play', axis=1)
-y = data['play']
 
 tree = id3_tree(X, y)
 print(tree)
-"""
+
 """
 # important pattern in ML
 gains = {
