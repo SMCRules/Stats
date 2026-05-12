@@ -1,13 +1,8 @@
 """
-A decision tree is loop + recursion:
-    a best feature
-    plus a decision tree for each branch: subtree = id3_tree(X_subset, y_subset)
+ID3 code with OOP:
+What objects exist, what data do they own, and what behaviour belongs to them?
 
-Code from scratch a id3 decision tree for simple binary classification. 
-All the variables are discrete => this simplifies the code
-We are using functions instead of classes.
-
-Code structure:
+Procedural functions become methods of an ID3Classifier object:
 1. Entropy 
 2. Information Gain
 3. Best Feature Selection
@@ -18,6 +13,32 @@ Code structure:
 import pandas as pd
 import numpy as np
 import math
+
+class ID3Classifier:
+
+    def entropy(self, input):
+        probs = input.value_counts(normalize=True)
+        return -sum(probs*np.log2(probs))
+        ...
+
+    def information_gain(self, X, y, feature):
+        ...
+
+    def best_split(self, X, y, features):
+        ...
+
+    def fit(self, X, y):
+        self.tree_ = self._build_tree(X, y, features)
+        return self
+
+    def _build_tree(self, X, y, features):
+        ...
+
+    def predict_one(self, x):
+        ...
+
+    def predict(self, X):
+        ...
 
 def entropy(input):
     probs = input.value_counts(normalize=True)
