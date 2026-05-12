@@ -15,6 +15,14 @@ import numpy as np
 import math
 
 class Node:
+    """
+    In a “pure” OOP design, the tree itself becomes a collection of objects.
+    each node is an object: Node(feature="Outlook")
+    each node stores: 
+    which feature it splits on
+    its child branches
+    or a prediction if it is a leaf: Node(prediction="Yes")
+    """
     def __init__(self, feature=None, prediction=None):
         self.feature = feature
         self.prediction = prediction
@@ -22,6 +30,12 @@ class Node:
 
     def is_leaf(self):
         return self.prediction is not None
+
+    def __repr__(self):
+        if self.is_leaf():
+            return f"Leaf(prediction = {self.prediction})"
+
+        return f"Node(feature={self.feature}, children={list(self.children.keys())})"
 
 class ID3Classifier:
     def __init__(self):
@@ -77,17 +91,19 @@ class ID3Classifier:
         Returns a tree/subtree, not overwrite self.tree_ at every recursive call.
         Only fit() assigns the final tree to: self.tree_
         """
-        
+        # Pure node: all labels are the same
         if len(y.unique()) == 1:
-            return y.iloc[0]
-    
+            return Node(prediction=y.iloc[0])
+
+        # No features left
         if X.shape[1] == 0:
-            return y.mode()[0]
+            return Node(prediction=y.mode()[0])
 
         # Select best feature
         best = self.best_split(X, y)
-        # root node of the tree with the best feature selected with IG
-        tree = {best: {}}
+        # root node of the tree with the best feature selected with IG, replace
+        # dictionary tree = {best: {}} with node = Node(feature=best) 
+        node = Node(feature=best) 
 
         # Split dataset by feature values
         # For the current best feature => create one branch for each value of that feature
@@ -99,31 +115,51 @@ class ID3Classifier:
             X_subset = X.loc[mask].drop(columns=[best])
             y_subset = y.loc[mask]            
 
-            subtree = self._build_tree(X_subset, y_subset)
-            tree[best][value] = subtree
+            child_node = self._build_tree(X_subset, y_subset)
+            # again replace dictionary tree[best][value] = subtree 
+            # with node.children[value] = child_node
+            node.children[value] = child_node
 
-        return tree
+        return node
         
-    def predict_one(self, xi, tree):
+    """
+    def _predict_one(self, x, tree):
+
+    # Base case: leaf node
+    if not isinstance(tree, dict):
+        return tree
+
+    root = next(iter(tree))
+
+    value = x[root]
+
+    # unseen category protection
+    if value not in tree[root]:
+        return self.default_class_
+
+    subtree = tree[root][value]
+
+    return self._predict_one(x, subtree)
+    """
+    
+    def _predict_one(self, xi, node):
         """
         Predicts a single observation, doing the recursive traversal
         Recursive internal helper, traverses the tree for ONE sample.
         """
-        # Base case: leaf node
-        if not isinstance(tree, dict):
-            return tree
+        if node.is_leaf():
+            return node.prediction
 
-        root = next(iter(tree))    
-        value = xi[root]
+        value = xi[node.feature]
 
         # unseen category protection
-        if value not in tree[root]:
+        if value not in node.children:
             return self.default_class_
 
         # Traverse the tree
-        subtree = tree[root][value]
+        child_node = node.children[value]
 
-        return self._predict_one(x, subtree)       
+        return self._predict_one(xi, child_node)       
         
 
     def predict(self, X):
@@ -134,11 +170,24 @@ class ID3Classifier:
         """
         predictions = []
 
-        for _, row in X.iterrows():
-            pred = self.predict_one(row, self.tree_)
-            predictions.append(pred)            
+        for _, row in X.iterrows():            
+            predictions.append(self._predict_one(row, self.tree_))            
 
         return predictions
+
+    def print_tree(self, node=None, indent=""):
+        if node is None:
+            node = self.tree_
+
+        if node.is_leaf():
+            print(indent + f"Predict: {node.prediction}")
+            return
+
+        print(indent + f"[Feature: {node.feature}]")
+
+        for value, child in node.children.items():
+            print(indent + f"--> {value}")
+            self.print_tree(child, indent + "   ")
 
 def data_load(file_path=None, synthetic=False):
     # Synthetic data
@@ -187,8 +236,12 @@ data['y'] = y
 print(X.shape, y.shape)
 print("all data\n", data)
 
-tree = id3_tree(X, y)
-print(tree)
+model = ID3Classifier()
+model.fit(X, y)
+print("model.tree_\n: ")
+model.print_tree()
+predictions = model.predict(X)
+print("predictions:\n", predictions)
 
 """
 # important pattern in ML
